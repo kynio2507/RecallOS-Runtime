@@ -7,7 +7,7 @@
 Package `recallos-runtime` hiện là project độc lập tại:
 
 ```text
-C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/recallos-runtime
+/path/to/recallos-runtime
 ```
 
 ### 2. Cài dependency
@@ -15,7 +15,7 @@ C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/recallos-runtime
 Trong thư mục package:
 
 ```powershell
-cd "C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/recallos-runtime"
+cd "/path/to/recallos-runtime"
 npm install
 ```
 
@@ -32,13 +32,13 @@ zod
 File server chính nằm ở:
 
 ```text
-C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/recallos-runtime/src/recallos_runtime_mcp.mjs
+/path/to/recallos-runtime/src/recallos_runtime_mcp.mjs
 ```
 
 Chạy thủ công nếu cần:
 
 ```powershell
-node "C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/recallos-runtime/src/recallos_runtime_mcp.mjs"
+node "/path/to/recallos-runtime/src/recallos_runtime_mcp.mjs"
 ```
 
 Hoặc dùng npm script:
@@ -56,12 +56,12 @@ Thêm/cập nhật trong `mcp_config.json`:
   "recallos-runtime": {
     "command": "node",
     "args": [
-      "c:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/recallos-runtime/src/recallos_runtime_mcp.mjs"
+      "/path/to/recallos-runtime/src/recallos_runtime_mcp.mjs"
     ],
     "env": {
-      "RECALLOS_ROOT": "c:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/recallos-runtime",
-      "RECALLOS_PROJECT_PATH": "c:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra",
-      "RECALLOS_DB_PATH": "c:/Users/Tung Admin/.gemini/antigravity/code_intel.sqlite",
+      "RECALLOS_ROOT": "/path/to/recallos-runtime",
+      "RECALLOS_PROJECT_PATH": "/path/to/project",
+      "RECALLOS_DB_PATH": "/path/to/recallos-runtime/data/recallos_runtime.sqlite",
       "RECALLOS_CODEGRAPH_CMD": "npx"
     }
   }
@@ -78,7 +78,7 @@ Env vars:
 | `RECALLOS_CODEGRAPH_CMD` | command gọi CodeGraph, mặc định `npx` |
 
 > [!IMPORTANT]
-> `code_intel.sqlite` chứa local knowledge/memory. Không commit DB vào Git.
+> `recallos_runtime.sqlite` chứa local knowledge/memory. Không commit DB vào Git.
 > Repo đã có `.gitignore` chặn `*.sqlite`, `*.db`, `node_modules`, và env files.
 
 ### 5. Khởi tạo CodeGraph index
@@ -86,7 +86,7 @@ Env vars:
 Chạy trong thư mục repo cần index:
 
 ```powershell
-cd "C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra"
+cd "/path/to/project"
 npx -y @colbymchenry/codegraph init -i .
 ```
 
@@ -107,7 +107,7 @@ Kết quả đúng:
 DB hiện dùng ngoài Git tại:
 
 ```text
-C:/Users/Tung Admin/.gemini/antigravity/code_intel.sqlite
+/path/to/recallos-runtime/data/recallos_runtime.sqlite
 ```
 
 Không cần tạo thủ công. Schema version hiện tại: **2**.
@@ -119,7 +119,7 @@ Không cần tạo thủ công. Schema version hiện tại: **2**.
 ### Test bằng npm script
 
 ```powershell
-cd "C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/recallos-runtime"
+cd "/path/to/recallos-runtime"
 npm test
 ```
 
@@ -161,7 +161,7 @@ CodeGraph [OK]
 Khi source code 9Base thay đổi nhiều, cần re-index:
 
 ```powershell
-cd "C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra"
+cd "/path/to/project"
 npx -y @colbymchenry/codegraph init -i .
 ```
 
@@ -172,13 +172,13 @@ npx -y @colbymchenry/codegraph init -i .
 ### Dùng Node.js
 
 ```powershell
-node -e "const db=require('better-sqlite3')('C:/Users/Tung Admin/.gemini/antigravity/code_intel.sqlite'); console.log(db.prepare('SELECT * FROM meta').all()); db.close()"
+node -e "const db=require('better-sqlite3')('/path/to/recallos-runtime/data/recallos_runtime.sqlite'); console.log(db.prepare('SELECT * FROM meta').all()); db.close()"
 ```
 
 Xem knowledge items:
 
 ```powershell
-node -e "const db=require('better-sqlite3')('C:/Users/Tung Admin/.gemini/antigravity/code_intel.sqlite'); db.prepare('SELECT id,type,title,created_at FROM knowledge_items ORDER BY created_at DESC LIMIT 20').all().forEach(r=>console.log(r)); db.close()"
+node -e "const db=require('better-sqlite3')('/path/to/recallos-runtime/data/recallos_runtime.sqlite'); db.prepare('SELECT id,type,title,created_at FROM knowledge_items ORDER BY created_at DESC LIMIT 20').all().forEach(r=>console.log(r)); db.close()"
 ```
 
 ---
@@ -196,8 +196,8 @@ Antigravity quản lý vòng đời MCP server. Nếu tool không phản hồi:
 ## Backup DB
 
 ```powershell
-Copy-Item "C:/Users/Tung Admin/.gemini/antigravity/code_intel.sqlite" `
-          "C:/Users/Tung Admin/.gemini/antigravity/code_intel.sqlite.bak"
+Copy-Item "/path/to/recallos-runtime/data/recallos_runtime.sqlite" `
+          "/path/to/recallos-runtime/data/recallos_runtime.sqlite.bak"
 ```
 
 DB chỉ chứa knowledge/memory local, không chứa source code 9Base. Không commit DB vào Git.
@@ -209,7 +209,7 @@ DB chỉ chứa knowledge/memory local, không chứa source code 9Base. Không 
 Khởi tạo repo local:
 
 ```powershell
-cd "C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/recallos-runtime"
+cd "/path/to/recallos-runtime"
 git init
 git add .
 git commit -m "Initial commit for recallos-runtime package"

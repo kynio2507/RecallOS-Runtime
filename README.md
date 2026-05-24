@@ -2,7 +2,7 @@
 
 Private GitHub repo: `recallos-runtime`.
 
-![RecallOS Runtime overview](assets/recallos-runtime.png)
+![RecallOS Runtime overview](assets/recall.png)
 
 RecallOS Runtime is a multi-module MCP/server tool platform for Antigravity and AI agents.
 
@@ -30,8 +30,8 @@ Planned modules:
 | Schema version | `2` |
 | MCP transport | `@modelcontextprotocol/sdk` StdioServerTransport |
 | SQLite driver | `better-sqlite3` |
-| DB path | `C:/Users/Tung Admin/.gemini/antigravity/code_intel.sqlite` |
-| Project path | `C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra` |
+| DB path | `/path/to/recallos-runtime/data/recallos_runtime.sqlite` |
+| Project path | `/path/to/project` |
 | Compatibility tools | `recall_runtime_*` |
 | Stability | production-grade local |
 

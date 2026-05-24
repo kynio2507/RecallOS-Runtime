@@ -20,7 +20,7 @@ const DEFAULT_PROJECT_PATH = path.resolve(PACKAGE_ROOT, '..');
 
 const ROOT = normalizePath(process.env.RECALLOS_ROOT || DEFAULT_ROOT);
 const PROJECT_PATH = normalizePath(process.env.RECALLOS_PROJECT_PATH || DEFAULT_PROJECT_PATH);
-const DB_PATH = normalizePath(process.env.RECALLOS_DB_PATH || path.join(ROOT, 'data', 'code_intel.sqlite'));
+const DB_PATH = normalizePath(process.env.RECALLOS_DB_PATH || path.join(ROOT, 'data', 'recallos_runtime.sqlite'));
 const CODEGRAPH_CMD = process.env.RECALLOS_CODEGRAPH_CMD || 'npx';
 const MAX_SECTION_CHARS = Number(process.env.RECALLOS_MAX_SECTION_CHARS || 12000);
 

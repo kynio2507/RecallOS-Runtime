@@ -29,11 +29,11 @@ CodeGraph hỗ trợ Windows, macOS, Linux.
 
 | Path | Purpose |
 |---|---|
-| `C:/Users/Tung Admin/.gemini/antigravity/recallos_runtime_mcp.mjs` | MCP server |
-| `C:/Users/Tung Admin/.gemini/antigravity/code_intel.sqlite` | SQLite DB |
-| `C:/Users/Tung Admin/.gemini/antigravity/test_recallos_runtime_mcp.mjs` | test script |
-| `C:/Users/Tung Admin/.gemini/antigravity-ide/mcp_config.json` | Antigravity MCP config |
-| `C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra` | project path |
+| `/path/to/recallos-runtime/src/recallos_runtime_mcp.mjs` | MCP server |
+| `/path/to/recallos-runtime/data/recallos_runtime.sqlite` | SQLite DB |
+| `/path/to/recallos-runtime/test/test_recallos_runtime_mcp.mjs` | test script |
+| `/path/to/antigravity-ide/mcp_config.json` | Antigravity MCP config |
+| `/path/to/project` | project path |
 
 ## MCP config
 
@@ -43,12 +43,12 @@ Server config:
 "recallos-runtime": {
   "command": "node",
   "args": [
-    "c:/Users/Tung Admin/.gemini/antigravity/recallos_runtime_mcp.mjs"
+    "/path/to/recallos-runtime/src/recallos_runtime_mcp.mjs"
   ],
   "env": {
-    "RECALLOS_ROOT": "c:/Users/Tung Admin/.gemini/antigravity",
-    "RECALLOS_PROJECT_PATH": "c:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra",
-    "RECALLOS_DB_PATH": "c:/Users/Tung Admin/.gemini/antigravity/code_intel.sqlite",
+    "RECALLOS_ROOT": "/path/to/recallos-runtime",
+    "RECALLOS_PROJECT_PATH": "/path/to/project",
+    "RECALLOS_DB_PATH": "/path/to/recallos-runtime/data/recallos_runtime.sqlite",
     "RECALLOS_CODEGRAPH_CMD": "npx"
   }
 }

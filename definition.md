@@ -42,7 +42,7 @@ recallos-runtime
 SQLite DB:
 
 ```text
-C:/Users/Tung Admin/.gemini/antigravity/code_intel.sqlite
+/path/to/recallos-runtime/data/recallos_runtime.sqlite
 ```
 
 Bảng chính:

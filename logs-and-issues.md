@@ -6,7 +6,7 @@
 
 ### 1. Internal Events (SQLite)
 
-Bảng `internal_events` trong `code_intel.sqlite` ghi lại các sự kiện nội bộ MCP:
+Bảng `internal_events` trong `recallos_runtime.sqlite` ghi lại các sự kiện nội bộ MCP:
 
 | Column | Type | Ý nghĩa |
 |---|---|---|
@@ -66,7 +66,7 @@ Antigravity thường không hiển thị stderr trực tiếp.
 Xem bằng cách chạy server thủ công:
 
 ```powershell
-node "C:/Users/Tung Admin/.gemini/antigravity/recallos_runtime_mcp.mjs" 2>&1
+node "/path/to/recallos-runtime/src/recallos_runtime_mcp.mjs" 2>&1
 ```
 
 ---
@@ -113,7 +113,7 @@ npx -y @colbymchenry/codegraph status .
 
 **Triệu chứng:** Server không chạy trên macOS/Linux.
 
-**Nguyên nhân:** Path trong `recallos_runtime_mcp.mjs` hardcode `C:/Users/Tung Admin/...`
+**Nguyên nhân:** Path trong `recallos_runtime_mcp.mjs` hardcode `/path/to/...`
 
 **Impact:** Không dùng được trên máy khác hoặc OS khác.
 

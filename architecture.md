@@ -16,9 +16,9 @@ SQLite Knowledge DB (better-sqlite3) + CodeGraph CLI (@colbymchenry/codegraph)
 
 | Component | Path | Mục đích |
 |---|---|---|
-| MCP server | `C:/Users/Tung Admin/.gemini/antigravity/recallos_runtime_mcp.mjs` | expose tools qua stdio MCP |
-| SQLite DB | `C:/Users/Tung Admin/.gemini/antigravity/code_intel.sqlite` | lưu knowledge (21 items) |
-| Test script | `C:/Users/Tung Admin/.gemini/antigravity/test_recallos_runtime_mcp.mjs` | test protocol/tools |
+| MCP server | `/path/to/recallos-runtime/src/recallos_runtime_mcp.mjs` | expose tools qua stdio MCP |
+| SQLite DB | `/path/to/recallos-runtime/data/recallos_runtime.sqlite` | lưu knowledge (21 items) |
+| Test script | `/path/to/recallos-runtime/test/test_recallos_runtime_mcp.mjs` | test protocol/tools |
 | CodeGraph index | `9base-ai-infra/.codegraph` | index source code (46 files, 312 nodes) |
 | SDK dependency | `@modelcontextprotocol/sdk` | MCP protocol transport |
 | SQLite driver | `better-sqlite3` | native SQLite bindings, stable |
