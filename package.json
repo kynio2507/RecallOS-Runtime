@@ -1,0 +1,24 @@
+{
+  "name": "9base-code-intel",
+  "version": "1.0.0-local",
+  "description": "9Base Code Intel MCP server: hybrid project memory, bug history, decisions, and CodeGraph context.",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "9base-code-intel": "./src/code_intel_mcp.mjs"
+  },
+  "scripts": {
+    "start": "node ./src/code_intel_mcp.mjs",
+    "test": "node ./test/test_code_intel_mcp.mjs",
+    "status": "node ./src/code_intel_mcp.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.15.1",
+    "better-sqlite3": "^12.10.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=20"
+  }
+}
