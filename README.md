@@ -2,6 +2,8 @@
 
 Private GitHub repo: `recallos-runtime`.
 
+![RecallOS Runtime overview](assets/recallos-runtime.png)
+
 RecallOS Runtime is a multi-module MCP/server tool platform for Antigravity and AI agents.
 
 Current Phase 1 module:
