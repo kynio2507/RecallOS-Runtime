@@ -1,4 +1,4 @@
-# Định nghĩa 9Base Code Intel
+# Định nghĩa RecallOS Runtime
 
 ## Định nghĩa ngắn
 

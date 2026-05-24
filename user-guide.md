@@ -132,7 +132,7 @@ code_intel_status
 
 Kết quả tốt:
 
-- server `9base-code-intel 1.0.0-local`
+- server `recallos-runtime 1.0.0-local`
 - schema version `2`
 - SQLite driver `better-sqlite3`
 - CodeGraph index OK

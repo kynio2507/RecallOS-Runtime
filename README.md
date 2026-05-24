@@ -1,60 +1,77 @@
-# 9Base Code Intel
+# RecallOS Runtime
 
-Private GitHub repo alias: `9base-intel-coding`.
+Private GitHub repo: `recallos-runtime`.
 
-`9base-code-intel` is a local MCP server for Antigravity. It provides shared code intelligence and memory for 9Base development.
+RecallOS Runtime is a multi-module MCP/server tool platform for Antigravity and AI agents.
 
-It combines:
+Current Phase 1 module:
 
-- **CodeGraph** — source graph, symbol lookup, context snippets.
-- **SQLite knowledge DB** — rules, bug history, architecture decisions, notes.
-- **MCP protocol** — tools exposed to Antigravity agents.
+- **Code Intel module** — SQL knowledge memory, bug history, architecture decisions, and CodeGraph context.
+
+Planned modules:
+
+- **Memory / Recall module** — recall, compression, retrieval, agent memory workflows.
+- **Diagnostics module** — runtime health, DB status, error summaries.
+- **Policy module** — required agent workflow and project rules.
+- **Search / Integration modules** — optional external tools.
 
 > [!IMPORTANT]
-> `9base-code-intel` is development infrastructure. It is not the 9Base runtime application.
+> Phase 1 keeps backward-compatible `code_intel_*` tool names and the existing local folder path. `9base-code-intel` is now the Code Intel module inside RecallOS Runtime.
 
 ## Current Status
 
 | Item | Status |
 |---|---|
+| Product | `RecallOS Runtime` |
+| Server name | `recallos-runtime` |
 | Version | `1.0.0-local` |
 | Schema version | `2` |
 | MCP transport | `@modelcontextprotocol/sdk` StdioServerTransport |
 | SQLite driver | `better-sqlite3` |
 | DB path | `C:/Users/Tung Admin/.gemini/antigravity/code_intel.sqlite` |
 | Project path | `C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra` |
-| Knowledge items | `21+` |
-| CodeGraph index | `[OK] Index is up to date` |
+| Compatibility tools | `code_intel_*` |
 | Stability | production-grade local |
 
 ## Tools
 
-| Tool | Purpose |
-|---|---|
-| `code_intel_query` | Query SQL knowledge + CodeGraph context |
-| `code_intel_remember` | Store reusable knowledge |
-| `code_intel_decision` | Store architecture decisions |
-| `code_intel_bug` | Store bug root cause and fix history |
-| `code_intel_status` | Check server, DB, and CodeGraph status |
+Current compatibility tools:
+
+| Tool | Module | Purpose |
+|---|---|---|
+| `code_intel_query` | Code Intel | Query SQL knowledge + CodeGraph context |
+| `code_intel_remember` | Code Intel | Store reusable knowledge |
+| `code_intel_decision` | Code Intel | Store architecture decisions |
+| `code_intel_bug` | Code Intel | Store bug root cause and fix history |
+| `code_intel_status` | Runtime / Code Intel | Check server, DB, and CodeGraph status |
+
+Phase 2 planned aliases:
+
+```text
+recall_runtime_query
+recall_runtime_remember
+```
 
 ## Required Agent Workflow
 
-All agents working on 9Base must follow the policy in:
-
-- [agent-pipeline.md](agent-pipeline.md)
-- [agent-policy.md](agent-policy.md)
+All agents working on 9Base must use RecallOS Runtime before meaningful work.
 
 Minimum required behavior:
 
 ```text
-1. Query 9base-code-intel before work.
+1. Query RecallOS Runtime / Code Intel before work.
 2. Verify important facts against current source code.
-3. Update 9base-code-intel after meaningful work.
+3. Update RecallOS Runtime after meaningful work.
 ```
+
+See:
+
+- [agent-pipeline.md](agent-pipeline.md)
+- [agent-policy.md](agent-policy.md)
 
 ## Documentation Boundary
 
-Static docs in this directory describe only `9base-code-intel` itself:
+Static docs in this directory describe RecallOS Runtime and its modules:
 
 - MCP server purpose
 - tool behavior
@@ -62,9 +79,9 @@ Static docs in this directory describe only `9base-code-intel` itself:
 - operations
 - system requirements
 - agent pipeline
-- known issues of Code Intel itself
+- known issues
 
-Project/runtime facts may be stored in the knowledge DB, but should not be expanded into these static docs.
+Project/runtime facts may be stored in the knowledge DB, but should not be expanded into static docs unless they define RecallOS Runtime itself.
 
 ## Quick Start
 
@@ -83,7 +100,7 @@ npm test
 Expected:
 
 ```text
-PASS 9base-code-intel MCP tests
+PASS RecallOS Runtime MCP tests
 ```
 
 ### Test in Antigravity
@@ -97,10 +114,9 @@ code_intel_status
 Expected:
 
 ```text
-Server: 9base-code-intel 1.0.0-local
-MCP transport: SDK stdio
-SQLite driver: better-sqlite3
-CodeGraph: [OK] Index is up to date
+Server: recallos-runtime 1.0.0-local
+Module: Code Intel
+Compatibility tools: code_intel_*
 ```
 
 ## Documentation

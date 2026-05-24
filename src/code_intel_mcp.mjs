@@ -9,7 +9,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 
-const SERVER_NAME = '9base-code-intel';
+const SERVER_NAME = 'recallos-runtime';
 const SERVER_VERSION = '1.0.0-local';
 const SCHEMA_VERSION = '2';
 const __filename = fileURLToPath(import.meta.url);
@@ -201,7 +201,7 @@ function codeIntelQuery(args = {}) {
     const tags = Array.isArray(args.tags) ? args.tags : [];
     logEvent(database, 'info', 'tool_call', `code_intel_query ${mode}: ${question}`);
     const knowledge = searchKnowledge(database, question, symbols, args.limit || 8, args.type || null, tags);
-    const sections = [`# 9Base Code Intel\n\nVersion: ${SERVER_VERSION}\nMode: ${mode}\nQuestion: ${question || '(empty)'}`];
+    const sections = [`# RecallOS Runtime\n\nModule: Code Intel\nVersion: ${SERVER_VERSION}\nMode: ${mode}\nQuestion: ${question || '(empty)'}`];
     sections.push(`## SQL Knowledge / Decisions / Bug History\n\n${formatKnowledge(knowledge)}`);
     if (args.includeContext !== false && question) {
       sections.push(`## CodeGraph Context\n\n${runCodeGraph(['context', question, '--path', PROJECT_PATH, '--max-nodes', '18', '--max-code', '6'], database)}`);
@@ -243,7 +243,7 @@ function getStatus() {
     const meta = database.prepare('SELECT key, value FROM meta ORDER BY key').all();
     const recentErrors = database.prepare("SELECT event, detail, created_at FROM internal_events WHERE level = 'error' ORDER BY created_at DESC LIMIT 5").all();
     const cg = runCodeGraph(['status', PROJECT_PATH], database);
-    return `# 9Base Code Intel Status\n\nServer: ${SERVER_NAME} ${SERVER_VERSION}\nMCP transport: SDK stdio\nSQLite driver: better-sqlite3\nDB: ${DB_PATH}\nProject: ${PROJECT_PATH}\n\n## Meta\n\n${JSON.stringify(meta, null, 2)}\n\n## SQL Counts\n\n${JSON.stringify(counts, null, 2)}\n\n## Recent Errors\n\n${JSON.stringify(recentErrors, null, 2)}\n\n## CodeGraph\n\n${cg}`;
+    return `# RecallOS Runtime Status\n\nServer: ${SERVER_NAME} ${SERVER_VERSION}\nModule: Code Intel\nCompatibility tools: code_intel_*\nMCP transport: SDK stdio\nSQLite driver: better-sqlite3\nDB: ${DB_PATH}\nProject: ${PROJECT_PATH}\n\n## Meta\n\n${JSON.stringify(meta, null, 2)}\n\n## SQL Counts\n\n${JSON.stringify(counts, null, 2)}\n\n## Recent Errors\n\n${JSON.stringify(recentErrors, null, 2)}\n\n## CodeGraph\n\n${cg}`;
   });
 }
 
@@ -256,7 +256,7 @@ const mcpServer = new McpServer(
 
 mcpServer.tool(
   'code_intel_query',
-  'Hybrid 9Base code intelligence: SQL memory/bug history/architecture decisions + CodeGraph context.',
+  'RecallOS Runtime Code Intel module: SQL memory/bug history/architecture decisions + CodeGraph context.',
   {
     question: z.string(),
     symbols: z.array(z.string()).optional(),

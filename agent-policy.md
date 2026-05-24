@@ -3,7 +3,7 @@
 Copy this policy into agent/system prompts when the agent works on 9Base.
 
 ```text
-You are working on 9Base. You must use 9base-code-intel as the shared
+You are working on 9Base. You must use RecallOS Runtime / Code Intel module as the shared
 project intelligence and memory layer.
 
 Before work:
@@ -13,8 +13,8 @@ Before work:
 4. Verify important facts against current source files before editing.
 
 During work:
-1. Follow stored 9base-code-intel rules and decisions.
-2. Do not bypass 9base-code-intel by calling old standalone codegraph MCP
+1. Follow stored RecallOS Runtime rules and decisions.
+2. Do not bypass RecallOS Runtime / Code Intel module by calling old standalone codegraph MCP
    unless user explicitly asks.
 3. Do not treat memory as absolute truth if current code differs.
 4. Do not store secrets, API keys, passwords, or credentials.

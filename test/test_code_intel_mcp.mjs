@@ -59,7 +59,7 @@ const requests = [
 const { responses, stderr } = await callMcp(requests);
 const byId = new Map(responses.filter((r) => r.id !== undefined).map((r) => [r.id, r]));
 
-assert(byId.get(1)?.result?.serverInfo?.name === '9base-code-intel', `initialize failed, got: ${JSON.stringify(byId.get(1))}`);
+assert(byId.get(1)?.result?.serverInfo?.name === 'recallos-runtime', `initialize failed, got: ${JSON.stringify(byId.get(1))}`);
 assert(byId.get(1)?.result?.serverInfo?.version === '1.0.0-local', 'wrong server version');
 assert(byId.get(2)?.result?.tools?.length === 5, `tools/list should return 5 tools, got ${byId.get(2)?.result?.tools?.length}`);
 assert(byId.get(3)?.result?.content?.[0]?.text?.includes('better-sqlite3'), 'status missing better-sqlite3');
@@ -70,4 +70,4 @@ assert(byId.get(6)?.result?.content?.[0]?.text?.includes(`${testId}-bug`), 'bug 
 assert(byId.get(7)?.result?.content?.[0]?.text?.includes(testId), 'query missing inserted test knowledge');
 assert(byId.get(8)?.result?.content?.[0]?.text?.includes('triggerCompression'), 'memory query missing triggerCompression');
 
-console.log('PASS 9base-code-intel MCP tests');
+console.log('PASS RecallOS Runtime MCP tests');

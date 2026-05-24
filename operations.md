@@ -126,7 +126,7 @@ npm test
 Kết quả đúng:
 
 ```text
-PASS 9base-code-intel MCP tests
+PASS RecallOS Runtime MCP tests
 ```
 
 Script test lần lượt:
@@ -148,7 +148,7 @@ code_intel_status
 Kỳ vọng:
 
 ```text
-Server: 9base-code-intel 1.0.0-local
+Server: recallos-runtime 1.0.0-local
 MCP transport: SDK stdio
 SQLite driver: better-sqlite3
 CodeGraph [OK]
