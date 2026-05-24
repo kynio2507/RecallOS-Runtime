@@ -235,3 +235,23 @@ git push -u origin main
 | CodeGraph chậm lần đầu | `npx` cần download, cần Internet |
 | Test script fail | Xem log lỗi cụ thể, kiểm tra DB path |
 | `spawnSync npx.cmd EINVAL` | Lỗi CodeGraph trên Windows, thường xảy ra khi path chứa space |
+## CLI Help
+
+RecallOS Runtime includes a CLI entrypoint:
+
+```powershell
+npm run help
+node ./src/cli/recall.mjs --help
+node ./src/cli/recall.mjs codegraph --help
+node ./src/cli/recall.mjs kb --help
+```
+
+After linking/installing globally:
+
+```powershell
+recall --help
+recall modules
+recall codegraph --help
+recall kb --help
+recall mcp
+```

@@ -5,12 +5,15 @@
   "type": "module",
   "private": true,
   "bin": {
+    "recall": "./src/cli/recall.mjs",
     "recallos-runtime": "./src/recallos_runtime_mcp.mjs"
   },
   "scripts": {
-    "start": "node ./src/recallos_runtime_mcp.mjs",
+    "start": "node ./src/cli/recall.mjs mcp",
+    "mcp": "node ./src/recallos_runtime_mcp.mjs",
+    "help": "node ./src/cli/recall.mjs --help",
     "test": "node ./test/test_recallos_runtime_mcp.mjs",
-    "status": "node ./src/recallos_runtime_mcp.mjs"
+    "status": "node ./src/cli/recall.mjs modules"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.15.1",

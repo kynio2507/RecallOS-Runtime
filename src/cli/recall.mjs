@@ -1,0 +1,127 @@
+#!/usr/bin/env node
+import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+import { SERVER_NAME, SERVER_VERSION } from '../runtime/config.mjs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const MCP_ENTRYPOINT = path.resolve(__dirname, '..', 'recallos_runtime_mcp.mjs');
+
+const CODEGRAPH_TOOLS = [
+  ['recall_codegraph_status', 'Check CodeGraph status for the configured project'],
+  ['recall_codegraph_search', 'Search symbols/code with CodeGraph'],
+  ['recall_codegraph_context', 'Get code context for a task or question'],
+  ['recall_codegraph_symbol', 'Analyze a symbol with search, context, and impact'],
+  ['recall_codegraph_impact', 'Find affected files/tests for a target'],
+];
+
+const KB_TOOLS = [
+  ['recall_kb_status', 'Check DB metadata, counts, and recent errors'],
+  ['recall_kb_query', 'Query stored knowledge by question, symbols, type, and tags'],
+  ['recall_kb_remember', 'Store reusable knowledge notes or rules'],
+  ['recall_kb_decision', 'Store architecture decisions'],
+  ['recall_kb_bug', 'Store bug root cause and fix history'],
+];
+
+function printRows(rows) {
+  const width = Math.max(...rows.map(([name]) => name.length));
+  for (const [name, description] of rows) {
+    console.log(`  ${name.padEnd(width)}  ${description}`);
+  }
+}
+
+function printHelp() {
+  console.log(`RecallOS Runtime ${SERVER_VERSION}
+Operating system for AI software teams.
+
+Usage:
+  recall <command> [options]
+
+Commands:
+  --help, help          Show this help
+  version              Print version
+  modules              List runtime modules
+  codegraph --help     Show CodeGraph module tools
+  kb --help            Show Knowledge Base module tools
+  mcp                  Start MCP stdio server
+
+Examples:
+  recall --help
+  recall modules
+  recall codegraph --help
+  recall kb --help
+  recall mcp
+`);
+}
+
+function printVersion() {
+  console.log(`${SERVER_NAME} ${SERVER_VERSION}`);
+}
+
+function printModules() {
+  console.log(`RecallOS Runtime modules\n\n  CodeGraph       Source graph, code context, symbol analysis, impact analysis\n  Knowledge Base  Persistent SQLite knowledge, decisions, bugs, and rules`);
+}
+
+function printCodeGraphHelp() {
+  console.log('CodeGraph Module\n\nMCP tools:');
+  printRows(CODEGRAPH_TOOLS);
+  console.log('\nUsage examples:\n  recall codegraph --help\n  recall mcp   # expose tools to MCP clients');
+}
+
+function printKbHelp() {
+  console.log('Knowledge Base Module\n\nMCP tools:');
+  printRows(KB_TOOLS);
+  console.log('\nUsage examples:\n  recall kb --help\n  recall mcp   # expose tools to MCP clients');
+}
+
+function startMcp() {
+  const child = spawn(process.execPath, [MCP_ENTRYPOINT], {
+    stdio: 'inherit',
+    env: process.env,
+  });
+  child.on('exit', (code, signal) => {
+    if (signal) process.kill(process.pid, signal);
+    process.exit(code ?? 0);
+  });
+}
+
+const args = process.argv.slice(2);
+const command = args[0] || '--help';
+
+switch (command) {
+  case '--help':
+  case '-h':
+  case 'help':
+    printHelp();
+    break;
+  case '--version':
+  case '-v':
+  case 'version':
+    printVersion();
+    break;
+  case 'modules':
+    printModules();
+    break;
+  case 'codegraph':
+    if (args.includes('--help') || args.includes('-h') || args.length === 1) printCodeGraphHelp();
+    else {
+      console.error('Unknown codegraph command. Try: recall codegraph --help');
+      process.exit(1);
+    }
+    break;
+  case 'kb':
+  case 'knowledge':
+    if (args.includes('--help') || args.includes('-h') || args.length === 1) printKbHelp();
+    else {
+      console.error('Unknown Knowledge Base command. Try: recall kb --help');
+      process.exit(1);
+    }
+    break;
+  case 'mcp':
+    startMcp();
+    break;
+  default:
+    console.error(`Unknown command: ${command}\nTry: recall --help`);
+    process.exit(1);
+}

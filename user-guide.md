@@ -169,3 +169,23 @@ sửa handleMessage ảnh hưởng gì?
 ```text
 permission rule được lưu ở đâu?
 ```
+## CLI Help
+
+RecallOS Runtime includes a CLI entrypoint:
+
+```powershell
+npm run help
+node ./src/cli/recall.mjs --help
+node ./src/cli/recall.mjs codegraph --help
+node ./src/cli/recall.mjs kb --help
+```
+
+After linking/installing globally:
+
+```powershell
+recall --help
+recall modules
+recall codegraph --help
+recall kb --help
+recall mcp
+```

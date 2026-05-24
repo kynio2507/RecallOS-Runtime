@@ -89,3 +89,23 @@ Sau đó cache npm local, không cần Internet.
 | Command execution | gọi `cmd.exe /c npx ...` cho CodeGraph |
 | No auto permission grant | không cấp quyền 9Base tự động |
 | Admin controls MCP config | user/admin quyết định bật server |
+## CLI Help
+
+RecallOS Runtime includes a CLI entrypoint:
+
+```powershell
+npm run help
+node ./src/cli/recall.mjs --help
+node ./src/cli/recall.mjs codegraph --help
+node ./src/cli/recall.mjs kb --help
+```
+
+After linking/installing globally:
+
+```powershell
+recall --help
+recall modules
+recall codegraph --help
+recall kb --help
+recall mcp
+```
