@@ -1,5 +1,7 @@
 # 9Base Code Intel
 
+Private GitHub repo alias: `9base-intel-coding`.
+
 `9base-code-intel` is a local MCP server for Antigravity. It provides shared code intelligence and memory for 9Base development.
 
 It combines:
@@ -66,10 +68,16 @@ Project/runtime facts may be stored in the knowledge DB, but should not be expan
 
 ## Quick Start
 
+### Install
+
+```powershell
+npm install
+```
+
 ### Test with terminal
 
 ```powershell
-node "C:/Users/Tung Admin/.gemini/antigravity/test_code_intel_mcp.mjs"
+npm test
 ```
 
 Expected:
