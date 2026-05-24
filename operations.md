@@ -4,10 +4,10 @@
 
 ### 1. Clone / mở package
 
-Package `9base-code-intel` hiện là project độc lập tại:
+Package `recallos-runtime` hiện là project độc lập tại:
 
 ```text
-C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/9base-code-intel
+C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/recallos-runtime
 ```
 
 ### 2. Cài dependency
@@ -15,7 +15,7 @@ C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/9base-code-intel
 Trong thư mục package:
 
 ```powershell
-cd "C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/9base-code-intel"
+cd "C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/recallos-runtime"
 npm install
 ```
 
@@ -32,13 +32,13 @@ zod
 File server chính nằm ở:
 
 ```text
-C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/9base-code-intel/src/code_intel_mcp.mjs
+C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/recallos-runtime/src/recallos_runtime_mcp.mjs
 ```
 
 Chạy thủ công nếu cần:
 
 ```powershell
-node "C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/9base-code-intel/src/code_intel_mcp.mjs"
+node "C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/recallos-runtime/src/recallos_runtime_mcp.mjs"
 ```
 
 Hoặc dùng npm script:
@@ -53,16 +53,16 @@ Thêm/cập nhật trong `mcp_config.json`:
 
 ```json
 {
-  "9base-code-intel": {
+  "recallos-runtime": {
     "command": "node",
     "args": [
-      "c:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/9base-code-intel/src/code_intel_mcp.mjs"
+      "c:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/recallos-runtime/src/recallos_runtime_mcp.mjs"
     ],
     "env": {
-      "CODE_INTEL_ROOT": "c:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/9base-code-intel",
-      "CODE_INTEL_PROJECT_PATH": "c:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra",
-      "CODE_INTEL_DB_PATH": "c:/Users/Tung Admin/.gemini/antigravity/code_intel.sqlite",
-      "CODE_INTEL_CODEGRAPH_CMD": "npx"
+      "RECALLOS_ROOT": "c:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/recallos-runtime",
+      "RECALLOS_PROJECT_PATH": "c:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra",
+      "RECALLOS_DB_PATH": "c:/Users/Tung Admin/.gemini/antigravity/code_intel.sqlite",
+      "RECALLOS_CODEGRAPH_CMD": "npx"
     }
   }
 }
@@ -72,10 +72,10 @@ Env vars:
 
 | Var | Ý nghĩa |
 |---|---|
-| `CODE_INTEL_ROOT` | thư mục package `9base-code-intel` |
-| `CODE_INTEL_PROJECT_PATH` | repo cần index bằng CodeGraph |
-| `CODE_INTEL_DB_PATH` | SQLite DB path |
-| `CODE_INTEL_CODEGRAPH_CMD` | command gọi CodeGraph, mặc định `npx` |
+| `RECALLOS_ROOT` | thư mục package `recallos-runtime` |
+| `RECALLOS_PROJECT_PATH` | repo cần index bằng CodeGraph |
+| `RECALLOS_DB_PATH` | SQLite DB path |
+| `RECALLOS_CODEGRAPH_CMD` | command gọi CodeGraph, mặc định `npx` |
 
 > [!IMPORTANT]
 > `code_intel.sqlite` chứa local knowledge/memory. Không commit DB vào Git.
@@ -119,7 +119,7 @@ Không cần tạo thủ công. Schema version hiện tại: **2**.
 ### Test bằng npm script
 
 ```powershell
-cd "C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/9base-code-intel"
+cd "C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/recallos-runtime"
 npm test
 ```
 
@@ -131,18 +131,18 @@ PASS RecallOS Runtime MCP tests
 
 Script test lần lượt:
 
-1. `code_intel_status` — kiểm tra DB, version, CodeGraph
-2. `code_intel_query` — query hybrid knowledge
-3. `code_intel_remember` — lưu và đọc lại note
-4. `code_intel_decision` — lưu architecture decision
-5. `code_intel_bug` — lưu bug/root cause/fix
+1. `recall_runtime_status` — kiểm tra DB, version, CodeGraph
+2. `recall_runtime_query` — query hybrid knowledge
+3. `recall_runtime_remember` — lưu và đọc lại note
+4. `recall_runtime_decision` — lưu architecture decision
+5. `recall_runtime_bug` — lưu bug/root cause/fix
 
 ### Test nhanh trong Antigravity
 
 Gọi tool:
 
 ```text
-code_intel_status
+recall_runtime_status
 ```
 
 Kỳ vọng:
@@ -209,10 +209,10 @@ DB chỉ chứa knowledge/memory local, không chứa source code 9Base. Không 
 Khởi tạo repo local:
 
 ```powershell
-cd "C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/9base-code-intel"
+cd "C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra/recallos-runtime"
 git init
 git add .
-git commit -m "Initial commit for 9base-code-intel package"
+git commit -m "Initial commit for recallos-runtime package"
 ```
 
 Khi tạo private repo trên GitHub, thêm remote:
@@ -229,9 +229,9 @@ git push -u origin main
 
 | Triệu chứng | Kiểm tra |
 |---|---|
-| `code_intel_status` không trả | Kiểm tra MCP config, restart Antigravity |
+| `recall_runtime_status` không trả | Kiểm tra MCP config, restart Antigravity |
 | `CodeGraph: ERROR` | Chạy lại `codegraph init` trong repo |
-| `knowledge_items = 0` | Kiểm tra `CODE_INTEL_DB_PATH` |
+| `knowledge_items = 0` | Kiểm tra `RECALLOS_DB_PATH` |
 | CodeGraph chậm lần đầu | `npx` cần download, cần Internet |
 | Test script fail | Xem log lỗi cụ thể, kiểm tra DB path |
 | `spawnSync npx.cmd EINVAL` | Lỗi CodeGraph trên Windows, thường xảy ra khi path chứa space |

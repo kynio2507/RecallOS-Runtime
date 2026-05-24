@@ -2,11 +2,11 @@
 
 > [!IMPORTANT]
 > This is a hard policy for agents working on 9Base.
-> Agents must use `9base-code-intel` before, during, and after work.
+> Agents must use `recallos-runtime` before, during, and after work.
 
 ## Purpose
 
-`9base-code-intel` is the shared intelligence layer for 9Base development.
+`recallos-runtime` is the shared intelligence layer for 9Base development.
 It stores rules, decisions, bugs, architecture notes, and reusable project
 knowledge so agents do not repeat old mistakes or lose context between sessions.
 
@@ -30,7 +30,7 @@ This pipeline applies to any agent that works on:
 Before analysis or implementation, agent must call:
 
 ```text
-code_intel_status
+recall_runtime_status
 ```
 
 Purpose:
@@ -43,7 +43,7 @@ Purpose:
 Then agent must call:
 
 ```text
-code_intel_query
+recall_runtime_query
 ```
 
 Use task-relevant keywords, files, and symbols.
@@ -69,7 +69,7 @@ Examples:
 
 ### 2. Research and verification
 
-Agents must treat `9base-code-intel` as a starting point, not absolute truth.
+Agents must treat `recallos-runtime` as a starting point, not absolute truth.
 
 Required behavior:
 
@@ -92,9 +92,9 @@ Required behavior:
 
 ### 4. Post-change memory update
 
-After meaningful work, agent must update `9base-code-intel`.
+After meaningful work, agent must update `recallos-runtime`.
 
-Use `code_intel_remember` for:
+Use `recall_runtime_remember` for:
 
 - new architecture map
 - module behavior summary
@@ -102,14 +102,14 @@ Use `code_intel_remember` for:
 - operational note
 - reusable debugging note
 
-Use `code_intel_decision` for:
+Use `recall_runtime_decision` for:
 
 - architecture choices
 - tool/workflow decisions
 - scope/boundary decisions
 - tradeoff decisions
 
-Use `code_intel_bug` for:
+Use `recall_runtime_bug` for:
 
 - root cause
 - fix
@@ -129,8 +129,8 @@ Final response or handoff must include:
 
 Agents must not:
 
-- bypass `9base-code-intel` with old standalone `codegraph` MCP unless user explicitly asks
-- write app-runtime details into `9base-code-intel` static docs
+- bypass `recallos-runtime` with old standalone `codegraph` MCP unless user explicitly asks
+- write app-runtime details into `recallos-runtime` static docs
 - store secrets, tokens, API keys, passwords, or private credentials
 - treat old knowledge as absolute truth without code verification
 - skip memory update after fixing a non-trivial bug
@@ -138,7 +138,7 @@ Agents must not:
 
 ## Documentation Boundary
 
-`9base-code-intel` static docs describe only:
+`recallos-runtime` static docs describe only:
 
 - MCP server purpose
 - tool behavior
@@ -146,7 +146,7 @@ Agents must not:
 - operations
 - policies
 - pipeline
-- known issues of `9base-code-intel` itself
+- known issues of `recallos-runtime` itself
 
 They must not become docs for:
 
@@ -158,27 +158,27 @@ They must not become docs for:
 - RecallOS runtime internals
 
 Project-specific facts belong in the `knowledge_items` DB through
-`code_intel_remember`, not in static Code Intel docs.
+`recall_runtime_remember`, not in static Code Intel docs.
 
 ## Minimal Required Calls
 
 For small tasks:
 
 ```text
-1. code_intel_query
+1. recall_runtime_query
 2. verify current file/code
-3. code_intel_remember if new reusable knowledge exists
+3. recall_runtime_remember if new reusable knowledge exists
 ```
 
 For complex tasks:
 
 ```text
-1. code_intel_status
-2. code_intel_query
+1. recall_runtime_status
+2. recall_runtime_query
 3. verify current code
 4. plan
 5. implement
 6. test
-7. code_intel_remember / decision / bug
+7. recall_runtime_remember / decision / bug
 8. handoff
 ```

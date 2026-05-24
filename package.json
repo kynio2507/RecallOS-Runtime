@@ -5,13 +5,12 @@
   "type": "module",
   "private": true,
   "bin": {
-    "recallos-runtime": "./src/code_intel_mcp.mjs",
-    "9base-code-intel": "./src/code_intel_mcp.mjs"
+    "recallos-runtime": "./src/recallos_runtime_mcp.mjs"
   },
   "scripts": {
-    "start": "node ./src/code_intel_mcp.mjs",
-    "test": "node ./test/test_code_intel_mcp.mjs",
-    "status": "node ./src/code_intel_mcp.mjs"
+    "start": "node ./src/recallos_runtime_mcp.mjs",
+    "test": "node ./test/test_recallos_runtime_mcp.mjs",
+    "status": "node ./src/recallos_runtime_mcp.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.15.1",

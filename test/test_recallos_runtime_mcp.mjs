@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const SERVER = path.resolve(__dirname, '../src/code_intel_mcp.mjs');
+const SERVER = path.resolve(__dirname, '../src/recallos_runtime_mcp.mjs');
 
 function callMcp(requests, timeoutMs = 90000) {
   return new Promise((resolve, reject) => {
@@ -48,12 +48,12 @@ const requests = [
   { jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'test', version: '1.0.0' } } },
   { jsonrpc: '2.0', method: 'notifications/initialized' },
   { jsonrpc: '2.0', id: 2, method: 'tools/list' },
-  { jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'code_intel_status', arguments: {} } },
-  { jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'code_intel_remember', arguments: { id: `${testId}-note`, type: 'note', title: 'MCP test note', content: `MCP test content ${testId}`, symbols: ['McpTestSymbol'], files: ['test/file.ts'], tags: ['test'] } } },
-  { jsonrpc: '2.0', id: 5, method: 'tools/call', params: { name: 'code_intel_decision', arguments: { id: `${testId}-decision`, title: 'MCP test decision', decision: `Decision content ${testId}`, reason: 'Test coverage', symbols: ['McpDecisionSymbol'], files: ['test/decision.ts'] } } },
-  { jsonrpc: '2.0', id: 6, method: 'tools/call', params: { name: 'code_intel_bug', arguments: { id: `${testId}-bug`, title: 'MCP test bug', rootCause: `Root cause ${testId}`, fix: 'Fix coverage', symbols: ['McpBugSymbol'], files: ['test/bug.ts'] } } },
-  { jsonrpc: '2.0', id: 7, method: 'tools/call', params: { name: 'code_intel_query', arguments: { question: testId, symbols: ['McpTestSymbol'], mode: 'debug', includeContext: false, includeImpact: false } } },
-  { jsonrpc: '2.0', id: 8, method: 'tools/call', params: { name: 'code_intel_query', arguments: { question: 'memory từng bị ghi chung vì sao?', symbols: ['triggerCompression'], mode: 'debug', includeContext: false, includeImpact: false } } },
+  { jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'recall_runtime_status', arguments: {} } },
+  { jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'recall_runtime_remember', arguments: { id: `${testId}-note`, type: 'note', title: 'MCP test note', content: `MCP test content ${testId}`, symbols: ['McpTestSymbol'], files: ['test/file.ts'], tags: ['test'] } } },
+  { jsonrpc: '2.0', id: 5, method: 'tools/call', params: { name: 'recall_runtime_decision', arguments: { id: `${testId}-decision`, title: 'MCP test decision', decision: `Decision content ${testId}`, reason: 'Test coverage', symbols: ['McpDecisionSymbol'], files: ['test/decision.ts'] } } },
+  { jsonrpc: '2.0', id: 6, method: 'tools/call', params: { name: 'recall_runtime_bug', arguments: { id: `${testId}-bug`, title: 'MCP test bug', rootCause: `Root cause ${testId}`, fix: 'Fix coverage', symbols: ['McpBugSymbol'], files: ['test/bug.ts'] } } },
+  { jsonrpc: '2.0', id: 7, method: 'tools/call', params: { name: 'recall_runtime_query', arguments: { question: testId, symbols: ['McpTestSymbol'], mode: 'debug', includeContext: false, includeImpact: false } } },
+  { jsonrpc: '2.0', id: 8, method: 'tools/call', params: { name: 'recall_runtime_query', arguments: { question: 'memory từng bị ghi chung vì sao?', symbols: ['triggerCompression'], mode: 'debug', includeContext: false, includeImpact: false } } },
 ];
 
 const { responses, stderr } = await callMcp(requests);

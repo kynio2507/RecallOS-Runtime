@@ -2,7 +2,7 @@
 
 ## Ai nên dùng tài liệu này?
 
-Người dùng cơ bản muốn dùng `9base-code-intel` trong Antigravity để hỏi về codebase 9Base.
+Người dùng cơ bản muốn dùng `recallos-runtime` trong Antigravity để hỏi về codebase 9Base.
 
 ## Dùng khi nào?
 
@@ -26,7 +26,7 @@ Không nên dùng cho:
 
 ## Tool quan trọng nhất
 
-### `code_intel_query`
+### `recall_runtime_query`
 
 Dùng cho hầu hết câu hỏi.
 
@@ -96,7 +96,7 @@ Ví dụ 3: hỏi code context
 
 ### Lưu bug
 
-Dùng `code_intel_bug`:
+Dùng `recall_runtime_bug`:
 
 ```json
 {
@@ -110,7 +110,7 @@ Dùng `code_intel_bug`:
 
 ### Lưu decision
 
-Dùng `code_intel_decision`:
+Dùng `recall_runtime_decision`:
 
 ```json
 {
@@ -127,7 +127,7 @@ Dùng `code_intel_decision`:
 Gọi:
 
 ```text
-code_intel_status
+recall_runtime_status
 ```
 
 Kết quả tốt:

@@ -11,7 +11,7 @@ Windows 10/11
 CodeGraph hỗ trợ Windows, macOS, Linux.
 
 > [!NOTE]
-> `9base-code-intel` hiện có path Windows hardcoded trong docs/config. Trên OS khác cần sửa path.
+> `recallos-runtime` hiện có path Windows hardcoded trong docs/config. Trên OS khác cần sửa path.
 
 ## Required software
 
@@ -29,9 +29,9 @@ CodeGraph hỗ trợ Windows, macOS, Linux.
 
 | Path | Purpose |
 |---|---|
-| `C:/Users/Tung Admin/.gemini/antigravity/code_intel_mcp.mjs` | MCP server |
+| `C:/Users/Tung Admin/.gemini/antigravity/recallos_runtime_mcp.mjs` | MCP server |
 | `C:/Users/Tung Admin/.gemini/antigravity/code_intel.sqlite` | SQLite DB |
-| `C:/Users/Tung Admin/.gemini/antigravity/test_code_intel_mcp.mjs` | test script |
+| `C:/Users/Tung Admin/.gemini/antigravity/test_recallos_runtime_mcp.mjs` | test script |
 | `C:/Users/Tung Admin/.gemini/antigravity-ide/mcp_config.json` | Antigravity MCP config |
 | `C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra` | project path |
 
@@ -40,16 +40,16 @@ CodeGraph hỗ trợ Windows, macOS, Linux.
 Server config:
 
 ```json
-"9base-code-intel": {
+"recallos-runtime": {
   "command": "node",
   "args": [
-    "c:/Users/Tung Admin/.gemini/antigravity/code_intel_mcp.mjs"
+    "c:/Users/Tung Admin/.gemini/antigravity/recallos_runtime_mcp.mjs"
   ],
   "env": {
-    "CODE_INTEL_ROOT": "c:/Users/Tung Admin/.gemini/antigravity",
-    "CODE_INTEL_PROJECT_PATH": "c:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra",
-    "CODE_INTEL_DB_PATH": "c:/Users/Tung Admin/.gemini/antigravity/code_intel.sqlite",
-    "CODE_INTEL_CODEGRAPH_CMD": "npx"
+    "RECALLOS_ROOT": "c:/Users/Tung Admin/.gemini/antigravity",
+    "RECALLOS_PROJECT_PATH": "c:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra",
+    "RECALLOS_DB_PATH": "c:/Users/Tung Admin/.gemini/antigravity/code_intel.sqlite",
+    "RECALLOS_CODEGRAPH_CMD": "npx"
   }
 }
 ```

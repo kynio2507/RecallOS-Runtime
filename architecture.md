@@ -2,12 +2,12 @@
 
 ## Tổng quan
 
-`9base-code-intel` gồm 3 lớp:
+`recallos-runtime` gồm 3 lớp:
 
 ```text
 MCP Tools (5 tools)
   ↓ @modelcontextprotocol/sdk StdioServerTransport
-Code Intel Server (code_intel_mcp.mjs)
+Code Intel Server (recallos_runtime_mcp.mjs)
   ↓
 SQLite Knowledge DB (better-sqlite3) + CodeGraph CLI (@colbymchenry/codegraph)
 ```
@@ -16,9 +16,9 @@ SQLite Knowledge DB (better-sqlite3) + CodeGraph CLI (@colbymchenry/codegraph)
 
 | Component | Path | Mục đích |
 |---|---|---|
-| MCP server | `C:/Users/Tung Admin/.gemini/antigravity/code_intel_mcp.mjs` | expose tools qua stdio MCP |
+| MCP server | `C:/Users/Tung Admin/.gemini/antigravity/recallos_runtime_mcp.mjs` | expose tools qua stdio MCP |
 | SQLite DB | `C:/Users/Tung Admin/.gemini/antigravity/code_intel.sqlite` | lưu knowledge (21 items) |
-| Test script | `C:/Users/Tung Admin/.gemini/antigravity/test_code_intel_mcp.mjs` | test protocol/tools |
+| Test script | `C:/Users/Tung Admin/.gemini/antigravity/test_recallos_runtime_mcp.mjs` | test protocol/tools |
 | CodeGraph index | `9base-ai-infra/.codegraph` | index source code (46 files, 312 nodes) |
 | SDK dependency | `@modelcontextprotocol/sdk` | MCP protocol transport |
 | SQLite driver | `better-sqlite3` | native SQLite bindings, stable |
@@ -32,7 +32,7 @@ Sử dụng `@modelcontextprotocol/sdk` với `StdioServerTransport`:
 
 ## MCP tools
 
-### `code_intel_status`
+### `recall_runtime_status`
 
 Trả:
 
@@ -44,7 +44,7 @@ Trả:
 - Recent errors
 - CodeGraph status
 
-### `code_intel_query`
+### `recall_runtime_query`
 
 Input:
 
@@ -70,7 +70,7 @@ CodeGraph query + context (symbol search, code snippets)
 markdown answer (knowledge + code context combined)
 ```
 
-### `code_intel_remember`
+### `recall_runtime_remember`
 
 Lưu knowledge dạng tự do. Hỗ trợ type:
 
@@ -82,11 +82,11 @@ Lưu knowledge dạng tự do. Hỗ trợ type:
 - `symbol_summary` — summary cho symbol/file
 - `architecture` — bản đồ kiến trúc module/system
 
-### `code_intel_decision`
+### `recall_runtime_decision`
 
 Shortcut lưu architecture decision.
 
-### `code_intel_bug`
+### `recall_runtime_bug`
 
 Shortcut lưu bug/root cause/fix.
 

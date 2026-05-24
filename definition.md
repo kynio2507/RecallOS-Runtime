@@ -2,14 +2,14 @@
 
 ## Định nghĩa ngắn
 
-`9base-code-intel` là MCP server local giúp Antigravity hiểu codebase 9Base tốt hơn bằng cách kết hợp CodeGraph và SQLite knowledge memory.
+`recallos-runtime` là MCP server local giúp Antigravity hiểu codebase 9Base tốt hơn bằng cách kết hợp CodeGraph và SQLite knowledge memory.
 
 ## Vị trí trong hệ thống
 
 ```text
 Antigravity
   ↓ MCP
-9base-code-intel
+recallos-runtime
   ├─ SQLite knowledge DB
   └─ CodeGraph CLI/index
         ↓
@@ -129,7 +129,7 @@ Có nghĩa:
 
 ## Định nghĩa cấu trúc log
 
-`9base-code-intel` không phải log platform. Log chỉ phục vụ debug MCP server.
+`recallos-runtime` không phải log platform. Log chỉ phục vụ debug MCP server.
 
 ### Internal Event
 
@@ -181,7 +181,7 @@ Ví dụ:
 |---|---|---|
 | Code Intel | query, remember, bug, decision, status | chạy 9Base app |
 | Knowledge DB | local memory, rules, bugs, project facts | production data/secrets |
-| Static docs | 9base-code-intel design, tools, schema, operations, policy | app-runtime feature docs |
+| Static docs | recallos-runtime design, tools, schema, operations, policy | app-runtime feature docs |
 | Logs | MCP debug events | user activity audit |
 | CodeGraph | context, symbols, impact | build/test runner |
 | MCP | tool interface | UI app |

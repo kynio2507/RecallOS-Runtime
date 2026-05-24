@@ -18,11 +18,11 @@ const PACKAGE_ROOT = path.resolve(__dirname, '..');
 const DEFAULT_ROOT = PACKAGE_ROOT;
 const DEFAULT_PROJECT_PATH = path.resolve(PACKAGE_ROOT, '..');
 
-const ROOT = normalizePath(process.env.CODE_INTEL_ROOT || DEFAULT_ROOT);
-const PROJECT_PATH = normalizePath(process.env.CODE_INTEL_PROJECT_PATH || DEFAULT_PROJECT_PATH);
-const DB_PATH = normalizePath(process.env.CODE_INTEL_DB_PATH || path.join(ROOT, 'data', 'code_intel.sqlite'));
-const CODEGRAPH_CMD = process.env.CODE_INTEL_CODEGRAPH_CMD || 'npx';
-const MAX_SECTION_CHARS = Number(process.env.CODE_INTEL_MAX_SECTION_CHARS || 12000);
+const ROOT = normalizePath(process.env.RECALLOS_ROOT || DEFAULT_ROOT);
+const PROJECT_PATH = normalizePath(process.env.RECALLOS_PROJECT_PATH || DEFAULT_PROJECT_PATH);
+const DB_PATH = normalizePath(process.env.RECALLOS_DB_PATH || path.join(ROOT, 'data', 'code_intel.sqlite'));
+const CODEGRAPH_CMD = process.env.RECALLOS_CODEGRAPH_CMD || 'npx';
+const MAX_SECTION_CHARS = Number(process.env.RECALLOS_MAX_SECTION_CHARS || 12000);
 
 function now() { return new Date().toISOString(); }
 function normalizePath(value) { return String(value || '').replace(/\\/g, '/'); }
@@ -199,7 +199,7 @@ function codeIntelQuery(args = {}) {
     const mode = args.mode || 'general';
     const symbols = Array.isArray(args.symbols) ? args.symbols : [];
     const tags = Array.isArray(args.tags) ? args.tags : [];
-    logEvent(database, 'info', 'tool_call', `code_intel_query ${mode}: ${question}`);
+    logEvent(database, 'info', 'tool_call', `recall_runtime_query ${mode}: ${question}`);
     const knowledge = searchKnowledge(database, question, symbols, args.limit || 8, args.type || null, tags);
     const sections = [`# RecallOS Runtime\n\nModule: Code Intel\nVersion: ${SERVER_VERSION}\nMode: ${mode}\nQuestion: ${question || '(empty)'}`];
     sections.push(`## SQL Knowledge / Decisions / Bug History\n\n${formatKnowledge(knowledge)}`);
@@ -233,7 +233,7 @@ function rememberKnowledge(args = {}) {
 
 function getStatus() {
   return withDb((database) => {
-    logEvent(database, 'info', 'tool_call', 'code_intel_status');
+    logEvent(database, 'info', 'tool_call', 'recall_runtime_status');
     const counts = {
       knowledge_items: database.prepare('SELECT COUNT(*) AS count FROM knowledge_items').get().count,
       symbol_summaries: database.prepare('SELECT COUNT(*) AS count FROM symbol_summaries').get().count,
@@ -243,7 +243,7 @@ function getStatus() {
     const meta = database.prepare('SELECT key, value FROM meta ORDER BY key').all();
     const recentErrors = database.prepare("SELECT event, detail, created_at FROM internal_events WHERE level = 'error' ORDER BY created_at DESC LIMIT 5").all();
     const cg = runCodeGraph(['status', PROJECT_PATH], database);
-    return `# RecallOS Runtime Status\n\nServer: ${SERVER_NAME} ${SERVER_VERSION}\nModule: Code Intel\nCompatibility tools: code_intel_*\nMCP transport: SDK stdio\nSQLite driver: better-sqlite3\nDB: ${DB_PATH}\nProject: ${PROJECT_PATH}\n\n## Meta\n\n${JSON.stringify(meta, null, 2)}\n\n## SQL Counts\n\n${JSON.stringify(counts, null, 2)}\n\n## Recent Errors\n\n${JSON.stringify(recentErrors, null, 2)}\n\n## CodeGraph\n\n${cg}`;
+    return `# RecallOS Runtime Status\n\nServer: ${SERVER_NAME} ${SERVER_VERSION}\nModule: Code Intel\nCompatibility tools: recall_runtime_*\nMCP transport: SDK stdio\nSQLite driver: better-sqlite3\nDB: ${DB_PATH}\nProject: ${PROJECT_PATH}\n\n## Meta\n\n${JSON.stringify(meta, null, 2)}\n\n## SQL Counts\n\n${JSON.stringify(counts, null, 2)}\n\n## Recent Errors\n\n${JSON.stringify(recentErrors, null, 2)}\n\n## CodeGraph\n\n${cg}`;
   });
 }
 
@@ -255,7 +255,7 @@ const mcpServer = new McpServer(
 );
 
 mcpServer.tool(
-  'code_intel_query',
+  'recall_runtime_query',
   'RecallOS Runtime Code Intel module: SQL memory/bug history/architecture decisions + CodeGraph context.',
   {
     question: z.string(),
@@ -273,7 +273,7 @@ mcpServer.tool(
 );
 
 mcpServer.tool(
-  'code_intel_remember',
+  'recall_runtime_remember',
   'Store 9Base knowledge/rule/decision/bug note.',
   {
     id: z.string().optional(),
@@ -290,7 +290,7 @@ mcpServer.tool(
 );
 
 mcpServer.tool(
-  'code_intel_decision',
+  'recall_runtime_decision',
   'Store architecture decision.',
   {
     id: z.string().optional(),
@@ -317,7 +317,7 @@ mcpServer.tool(
 );
 
 mcpServer.tool(
-  'code_intel_bug',
+  'recall_runtime_bug',
   'Store known bug/root cause/fix.',
   {
     id: z.string().optional(),
@@ -344,7 +344,7 @@ mcpServer.tool(
 );
 
 mcpServer.tool(
-  'code_intel_status',
+  'recall_runtime_status',
   'Show status, DB counts, metadata, and CodeGraph status.',
   {},
   async () => ({

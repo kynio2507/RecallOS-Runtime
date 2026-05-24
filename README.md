@@ -16,7 +16,7 @@ Planned modules:
 - **Search / Integration modules** — optional external tools.
 
 > [!IMPORTANT]
-> Phase 1 keeps backward-compatible `code_intel_*` tool names and the existing local folder path. `9base-code-intel` is now the Code Intel module inside RecallOS Runtime.
+> Phase 1 keeps backward-compatible `recall_runtime_*` tool names and the existing local folder path. `recallos-runtime` is now the Code Intel module inside RecallOS Runtime.
 
 ## Current Status
 
@@ -30,7 +30,7 @@ Planned modules:
 | SQLite driver | `better-sqlite3` |
 | DB path | `C:/Users/Tung Admin/.gemini/antigravity/code_intel.sqlite` |
 | Project path | `C:/Users/Tung Admin/.gemini/antigravity/scratch/9base-ai-infra` |
-| Compatibility tools | `code_intel_*` |
+| Compatibility tools | `recall_runtime_*` |
 | Stability | production-grade local |
 
 ## Tools
@@ -39,11 +39,11 @@ Current compatibility tools:
 
 | Tool | Module | Purpose |
 |---|---|---|
-| `code_intel_query` | Code Intel | Query SQL knowledge + CodeGraph context |
-| `code_intel_remember` | Code Intel | Store reusable knowledge |
-| `code_intel_decision` | Code Intel | Store architecture decisions |
-| `code_intel_bug` | Code Intel | Store bug root cause and fix history |
-| `code_intel_status` | Runtime / Code Intel | Check server, DB, and CodeGraph status |
+| `recall_runtime_query` | Code Intel | Query SQL knowledge + CodeGraph context |
+| `recall_runtime_remember` | Code Intel | Store reusable knowledge |
+| `recall_runtime_decision` | Code Intel | Store architecture decisions |
+| `recall_runtime_bug` | Code Intel | Store bug root cause and fix history |
+| `recall_runtime_status` | Runtime / Code Intel | Check server, DB, and CodeGraph status |
 
 Phase 2 planned aliases:
 
@@ -108,7 +108,7 @@ PASS RecallOS Runtime MCP tests
 Call:
 
 ```text
-code_intel_status
+recall_runtime_status
 ```
 
 Expected:
@@ -116,7 +116,7 @@ Expected:
 ```text
 Server: recallos-runtime 1.0.0-local
 Module: Code Intel
-Compatibility tools: code_intel_*
+Compatibility tools: recall_runtime_*
 ```
 
 ## Documentation
