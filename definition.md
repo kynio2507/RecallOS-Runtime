@@ -179,7 +179,7 @@ Ví dụ:
 
 | Boundary | Trong scope | Ngoài scope |
 |---|---|---|
-| Code Intel | query, remember, bug, decision, status | chạy 9Base app |
+| Knowledge Base + CodeGraph | query, remember, bug, decision, status | chạy 9Base app |
 | Knowledge DB | local memory, rules, bugs, project facts | production data/secrets |
 | Static docs | recallos-runtime design, tools, schema, operations, policy | app-runtime feature docs |
 | Logs | MCP debug events | user activity audit |

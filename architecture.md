@@ -7,7 +7,7 @@
 ```text
 MCP Tools (5 tools)
   ↓ @modelcontextprotocol/sdk StdioServerTransport
-Code Intel Server (recallos_runtime_mcp.mjs)
+Knowledge Base + CodeGraph Server (recallos_runtime_mcp.mjs)
   ↓
 SQLite Knowledge DB (better-sqlite3) + CodeGraph CLI (@colbymchenry/codegraph)
 ```
@@ -32,7 +32,7 @@ Sử dụng `@modelcontextprotocol/sdk` với `StdioServerTransport`:
 
 ## MCP tools
 
-### `recall_runtime_status`
+### `recall_kb_status`
 
 Trả:
 
@@ -44,7 +44,7 @@ Trả:
 - Recent errors
 - CodeGraph status
 
-### `recall_runtime_query`
+### `recall_kb_query`
 
 Input:
 
@@ -70,7 +70,7 @@ CodeGraph query + context (symbol search, code snippets)
 markdown answer (knowledge + code context combined)
 ```
 
-### `recall_runtime_remember`
+### `recall_kb_remember`
 
 Lưu knowledge dạng tự do. Hỗ trợ type:
 
@@ -82,11 +82,11 @@ Lưu knowledge dạng tự do. Hỗ trợ type:
 - `symbol_summary` — summary cho symbol/file
 - `architecture` — bản đồ kiến trúc module/system
 
-### `recall_runtime_decision`
+### `recall_kb_decision`
 
 Shortcut lưu architecture decision.
 
-### `recall_runtime_bug`
+### `recall_kb_bug`
 
 Shortcut lưu bug/root cause/fix.
 

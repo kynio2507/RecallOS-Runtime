@@ -131,18 +131,18 @@ PASS RecallOS Runtime MCP tests
 
 Script test lần lượt:
 
-1. `recall_runtime_status` — kiểm tra DB, version, CodeGraph
-2. `recall_runtime_query` — query hybrid knowledge
-3. `recall_runtime_remember` — lưu và đọc lại note
-4. `recall_runtime_decision` — lưu architecture decision
-5. `recall_runtime_bug` — lưu bug/root cause/fix
+1. `recall_kb_status` — kiểm tra DB, version, CodeGraph
+2. `recall_kb_query` — query hybrid knowledge
+3. `recall_kb_remember` — lưu và đọc lại note
+4. `recall_kb_decision` — lưu architecture decision
+5. `recall_kb_bug` — lưu bug/root cause/fix
 
 ### Test nhanh trong Antigravity
 
 Gọi tool:
 
 ```text
-recall_runtime_status
+recall_kb_status
 ```
 
 Kỳ vọng:
@@ -229,7 +229,7 @@ git push -u origin main
 
 | Triệu chứng | Kiểm tra |
 |---|---|
-| `recall_runtime_status` không trả | Kiểm tra MCP config, restart Antigravity |
+| `recall_kb_status` không trả | Kiểm tra MCP config, restart Antigravity |
 | `CodeGraph: ERROR` | Chạy lại `codegraph init` trong repo |
 | `knowledge_items = 0` | Kiểm tra `RECALLOS_DB_PATH` |
 | CodeGraph chậm lần đầu | `npx` cần download, cần Internet |

@@ -90,5 +90,5 @@ Hệ thống dùng được hằng ngày trong Antigravity với MCP server ổn
 
 1. **Stability trước features** — v0.3.0 fix nền trước khi thêm tính năng
 2. **CodeGraph MCP > CLI** — migrate dần sang MCP integration
-3. **Minimal core** — không nhét tính năng không liên quan code intelligence
+3. **Minimal core** — không nhét tính năng không liên quan Knowledge Base + CodeGraphligence
 4. **Local-first** — không thêm external service dependency không cần thiết

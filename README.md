@@ -6,9 +6,10 @@ Private GitHub repo: `recallos-runtime`.
 
 RecallOS Runtime is a multi-module MCP/server tool platform for Antigravity and AI agents.
 
-Current Phase 1 module:
+Current modules:
 
-- **Code Intel module** — SQL knowledge memory, bug history, architecture decisions, and CodeGraph context.
+- **Knowledge Base** — SQLite knowledge memory, bug history, architecture decisions, notes, and rules.
+- **CodeGraph** — source graph search, code context, symbol analysis, and impact analysis.
 
 Planned modules:
 
@@ -18,7 +19,7 @@ Planned modules:
 - **Search / Integration modules** — optional external tools.
 
 > [!IMPORTANT]
-> Phase 1 keeps backward-compatible `recall_runtime_*` tool names and the existing local folder path. `recallos-runtime` is now the Code Intel module inside RecallOS Runtime.
+> RecallOS Runtime now exposes strict module-specific MCP tools only.
 
 ## Current Status
 
@@ -32,27 +33,30 @@ Planned modules:
 | SQLite driver | `better-sqlite3` |
 | DB path | `/path/to/recallos-runtime/data/recallos_runtime.sqlite` |
 | Project path | `/path/to/project` |
-| Compatibility tools | `recall_runtime_*` |
+| Tool namespaces | `recall_kb_*`, `recall_codegraph_*` |
 | Stability | production-grade local |
 
 ## Tools
 
-Current compatibility tools:
+### Knowledge Base
 
-| Tool | Module | Purpose |
-|---|---|---|
-| `recall_runtime_query` | Code Intel | Query SQL knowledge + CodeGraph context |
-| `recall_runtime_remember` | Code Intel | Store reusable knowledge |
-| `recall_runtime_decision` | Code Intel | Store architecture decisions |
-| `recall_runtime_bug` | Code Intel | Store bug root cause and fix history |
-| `recall_runtime_status` | Runtime / Code Intel | Check server, DB, and CodeGraph status |
+| Tool | Purpose |
+|---|---|
+| `recall_kb_status` | Check DB, metadata, counts, and recent errors |
+| `recall_kb_query` | Query stored knowledge by question, symbols, type, and tags |
+| `recall_kb_remember` | Store reusable knowledge notes/rules |
+| `recall_kb_decision` | Store architecture decisions |
+| `recall_kb_bug` | Store bug root cause and fix history |
 
-Phase 2 planned aliases:
+### CodeGraph
 
-```text
-recall_runtime_query
-recall_runtime_remember
-```
+| Tool | Purpose |
+|---|---|
+| `recall_codegraph_status` | Check CodeGraph status for configured project |
+| `recall_codegraph_search` | Search symbols/code with CodeGraph |
+| `recall_codegraph_context` | Get code context for a task/question |
+| `recall_codegraph_symbol` | Analyze a symbol with search/context/impact |
+| `recall_codegraph_impact` | Find affected files/tests for a target |
 
 ## Required Agent Workflow
 
@@ -61,7 +65,7 @@ All agents working on 9Base must use RecallOS Runtime before meaningful work.
 Minimum required behavior:
 
 ```text
-1. Query RecallOS Runtime / Code Intel before work.
+1. Query RecallOS Runtime / Knowledge Base + CodeGraph before work.
 2. Verify important facts against current source code.
 3. Update RecallOS Runtime after meaningful work.
 ```
@@ -110,15 +114,20 @@ PASS RecallOS Runtime MCP tests
 Call:
 
 ```text
-recall_runtime_status
+recall_kb_status
 ```
 
 Expected:
 
 ```text
+# Knowledge Base Module Status
 Server: recallos-runtime 1.0.0-local
-Module: Code Intel
-Compatibility tools: recall_runtime_*
+```
+
+For CodeGraph:
+
+```text
+# CodeGraph Module Status
 ```
 
 ## Documentation

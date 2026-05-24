@@ -26,7 +26,7 @@ Không nên dùng cho:
 
 ## Tool quan trọng nhất
 
-### `recall_runtime_query`
+### `recall_kb_query`
 
 Dùng cho hầu hết câu hỏi.
 
@@ -96,7 +96,7 @@ Ví dụ 3: hỏi code context
 
 ### Lưu bug
 
-Dùng `recall_runtime_bug`:
+Dùng `recall_kb_bug`:
 
 ```json
 {
@@ -110,7 +110,7 @@ Dùng `recall_runtime_bug`:
 
 ### Lưu decision
 
-Dùng `recall_runtime_decision`:
+Dùng `recall_kb_decision`:
 
 ```json
 {
@@ -127,7 +127,7 @@ Dùng `recall_runtime_decision`:
 Gọi:
 
 ```text
-recall_runtime_status
+recall_kb_status
 ```
 
 Kết quả tốt:

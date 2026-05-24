@@ -30,7 +30,7 @@ This pipeline applies to any agent that works on:
 Before analysis or implementation, agent must call:
 
 ```text
-recall_runtime_status
+recall_kb_status
 ```
 
 Purpose:
@@ -43,7 +43,7 @@ Purpose:
 Then agent must call:
 
 ```text
-recall_runtime_query
+recall_kb_query
 ```
 
 Use task-relevant keywords, files, and symbols.
@@ -94,7 +94,7 @@ Required behavior:
 
 After meaningful work, agent must update `recallos-runtime`.
 
-Use `recall_runtime_remember` for:
+Use `recall_kb_remember` for:
 
 - new architecture map
 - module behavior summary
@@ -102,14 +102,14 @@ Use `recall_runtime_remember` for:
 - operational note
 - reusable debugging note
 
-Use `recall_runtime_decision` for:
+Use `recall_kb_decision` for:
 
 - architecture choices
 - tool/workflow decisions
 - scope/boundary decisions
 - tradeoff decisions
 
-Use `recall_runtime_bug` for:
+Use `recall_kb_bug` for:
 
 - root cause
 - fix
@@ -158,27 +158,27 @@ They must not become docs for:
 - RecallOS runtime internals
 
 Project-specific facts belong in the `knowledge_items` DB through
-`recall_runtime_remember`, not in static Code Intel docs.
+`recall_kb_remember`, not in static Knowledge Base + CodeGraph docs.
 
 ## Minimal Required Calls
 
 For small tasks:
 
 ```text
-1. recall_runtime_query
+1. recall_kb_query
 2. verify current file/code
-3. recall_runtime_remember if new reusable knowledge exists
+3. recall_kb_remember if new reusable knowledge exists
 ```
 
 For complex tasks:
 
 ```text
-1. recall_runtime_status
-2. recall_runtime_query
+1. recall_kb_status
+2. recall_kb_query
 3. verify current code
 4. plan
 5. implement
 6. test
-7. recall_runtime_remember / decision / bug
+7. recall_kb_remember / decision / bug
 8. handoff
 ```
