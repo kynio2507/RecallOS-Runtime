@@ -4,6 +4,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { SERVER_NAME, SERVER_VERSION } from './runtime/config.mjs';
 import { registerCodeGraphTools } from './modules/codegraph/tools.mjs';
 import { registerKnowledgeBaseTools } from './modules/knowledge-base/tools.mjs';
+import { registerMemoryTools } from './modules/memory/tools.mjs';
 
 const mcpServer = new McpServer(
   { name: SERVER_NAME, version: SERVER_VERSION },
@@ -12,6 +13,7 @@ const mcpServer = new McpServer(
 
 registerCodeGraphTools(mcpServer);
 registerKnowledgeBaseTools(mcpServer);
+registerMemoryTools(mcpServer);
 
 const transport = new StdioServerTransport();
 await mcpServer.connect(transport);

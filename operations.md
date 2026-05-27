@@ -255,3 +255,61 @@ recall codegraph --help
 recall kb --help
 recall mcp
 ```
+## Memory Module
+
+RecallOS Runtime includes a 4-layer agent memory module:
+
+| Layer | Storage | Purpose |
+|---|---|---|
+| Raw Memory | PostgreSQL `memory_events` | Store important raw events |
+| Active Memory | PostgreSQL `memory_facts` | Store compressed facts and profiles |
+| Context Index | PostgreSQL + pgvector `memory_chunks` | Semantic search over memory chunks |
+| Working Memory | In-process runtime state | Track current goal, task, open files, constraints, and pending questions |
+
+Memory tools:
+
+```text
+recall_memory_status
+recall_memory_write_event
+recall_memory_upsert_fact
+recall_memory_search
+recall_memory_get_profile
+recall_memory_summarize_session
+recall_memory_link
+```
+
+PostgreSQL + pgvector quick start:
+
+```powershell
+docker run -d --name recallos-pg -p 5432:5432 -e POSTGRES_USER=recallos -e POSTGRES_PASSWORD=recallos -e POSTGRES_DB=recallos_memory pgvector/pgvector:pg17
+```
+
+Embedding uses an OpenAI-compatible endpoint:
+
+```text
+RECALLOS_EMBEDDING_ENDPOINT=https://your-router.example/v1/embeddings
+RECALLOS_EMBEDDING_MODEL=your-embedding-model
+RECALLOS_EMBEDDING_DIM=3072
+```
+
+Example event:
+
+```json
+{
+  "actor": "main_agent",
+  "event_type": "observation",
+  "content": "RecallOS Memory stores raw events, active facts, vector context, and working memory.",
+  "embed": true
+}
+```
+
+Example fact:
+
+```json
+{
+  "scope": "project",
+  "key": "memory_architecture",
+  "value": "4-layer memory: raw events, active facts, vector context, working state",
+  "confidence": 1
+}
+```

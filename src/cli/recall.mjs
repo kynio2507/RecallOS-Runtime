@@ -24,6 +24,16 @@ const KB_TOOLS = [
   ['recall_kb_bug', 'Store bug root cause and fix history'],
 ];
 
+const MEMORY_TOOLS = [
+  ['recall_memory_status', 'Show PostgreSQL counts and working memory state'],
+  ['recall_memory_write_event', 'Write raw event to memory_events'],
+  ['recall_memory_upsert_fact', 'Upsert active fact to memory_facts'],
+  ['recall_memory_search', 'Hybrid search across SQL and vector layers'],
+  ['recall_memory_get_profile', 'Get facts for a scope'],
+  ['recall_memory_summarize_session', 'Summarize session events into facts'],
+  ['recall_memory_link', 'Link two memory items by relation'],
+];
+
 function printRows(rows) {
   const width = Math.max(...rows.map(([name]) => name.length));
   for (const [name, description] of rows) {
@@ -44,6 +54,7 @@ Commands:
   modules              List runtime modules
   codegraph --help     Show CodeGraph module tools
   kb --help            Show Knowledge Base module tools
+  memory --help        Show Memory module tools
   mcp                  Start MCP stdio server
 
 Examples:
@@ -51,6 +62,7 @@ Examples:
   recall modules
   recall codegraph --help
   recall kb --help
+  recall memory --help
   recall mcp
 `);
 }
@@ -60,7 +72,7 @@ function printVersion() {
 }
 
 function printModules() {
-  console.log(`RecallOS Runtime modules\n\n  CodeGraph       Source graph, code context, symbol analysis, impact analysis\n  Knowledge Base  Persistent SQLite knowledge, decisions, bugs, and rules`);
+  console.log(`RecallOS Runtime modules\n\n  CodeGraph       Source graph, code context, symbol analysis, impact analysis\n  Knowledge Base  Persistent SQLite knowledge, decisions, bugs, and rules\n  Memory          4-layer agent memory: raw events, active facts, vector context, working state`);
 }
 
 function printCodeGraphHelp() {
@@ -73,6 +85,12 @@ function printKbHelp() {
   console.log('Knowledge Base Module\n\nMCP tools:');
   printRows(KB_TOOLS);
   console.log('\nUsage examples:\n  recall kb --help\n  recall mcp   # expose tools to MCP clients');
+}
+
+function printMemoryHelp() {
+  console.log('Memory Module\n\n4-layer agent memory: PostgreSQL raw events, active facts, pgvector context index, and in-process working memory.\n\nMCP tools:');
+  printRows(MEMORY_TOOLS);
+  console.log('\nUsage examples:\n  recall memory --help\n  recall mcp   # expose tools to MCP clients');
 }
 
 function startMcp() {
@@ -115,6 +133,13 @@ switch (command) {
     if (args.includes('--help') || args.includes('-h') || args.length === 1) printKbHelp();
     else {
       console.error('Unknown Knowledge Base command. Try: recall kb --help');
+      process.exit(1);
+    }
+    break;
+  case 'memory':
+    if (args.includes('--help') || args.includes('-h') || args.length === 1) printMemoryHelp();
+    else {
+      console.error('Unknown Memory command. Try: recall memory --help');
       process.exit(1);
     }
     break;

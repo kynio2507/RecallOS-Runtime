@@ -73,6 +73,13 @@ const expectedTools = [
   'recall_kb_query',
   'recall_kb_remember',
   'recall_kb_status',
+  'recall_memory_get_profile',
+  'recall_memory_link',
+  'recall_memory_search',
+  'recall_memory_status',
+  'recall_memory_summarize_session',
+  'recall_memory_upsert_fact',
+  'recall_memory_write_event',
 ].sort();
 assert(JSON.stringify(toolNames) === JSON.stringify(expectedTools), `tools/list mismatch, got ${JSON.stringify(toolNames)}`);
 assert(byId.get(3)?.result?.content?.[0]?.text?.includes('Knowledge Base Module Status'), 'kb status missing heading');
