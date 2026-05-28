@@ -46,6 +46,12 @@ const PROJECT_BRAIN_TOOLS = [
   ['recall_project_status', 'Show Project Brain table counts'],
 ];
 
+const CONTEXT_TOOLS = [
+  ['recall_context_pack', 'Full Agent Context: all 4 modules assembled'],
+  ['recall_context_for_task', 'Focused Task Context: related only'],
+  ['recall_context_for_worker', 'Minimal Worker Context: for sub-agents'],
+];
+
 function printRows(rows) {
   const width = Math.max(...rows.map(([name]) => name.length));
   for (const [name, description] of rows) {
@@ -68,6 +74,7 @@ Commands:
   kb --help            Show Knowledge Base module tools
   memory --help        Show Memory module tools
   project --help       Show Project Brain module tools
+  context --help       Show Context Orchestrator tools
   mcp                  Start MCP stdio server
 
 Examples:
@@ -77,6 +84,7 @@ Examples:
   recall kb --help
   recall memory --help
   recall project --help
+  recall context --help
   recall mcp
 `);
 }
@@ -86,7 +94,7 @@ function printVersion() {
 }
 
 function printModules() {
-  console.log(`RecallOS Runtime modules\n\n  CodeGraph       Source graph, code context, symbol analysis, impact analysis\n  Knowledge Base  Persistent SQLite knowledge, decisions, bugs, and rules\n  Memory          4-layer agent memory: raw events, active facts, vector context, working state\n  Project Brain   Project knowledge: docs, modules, roadmap, decisions, glossary, context pack`);
+  console.log(`RecallOS Runtime modules\n\n  CodeGraph            Source graph, code context, symbol analysis, impact analysis\n  Knowledge Base       Persistent SQLite knowledge, decisions, bugs, and rules\n  Memory               4-layer agent memory: raw events, active facts, vector context, working state\n  Project Brain        Project knowledge: docs, modules, roadmap, decisions, glossary\n  Context Orchestrator Top-level context assembly across all modules`);
 }
 
 function printCodeGraphHelp() {
@@ -108,9 +116,15 @@ function printMemoryHelp() {
 }
 
 function printProjectBrainHelp() {
-  console.log('Project Brain Module\n\nProject knowledge base: docs, modules, roadmap, decisions, glossary.\nCritical tool: recall_project_context_pack — assembles full context for a task.\n\nMCP tools:');
+  console.log('Project Brain Module\n\nProject knowledge base: docs, modules, roadmap, decisions, glossary.\nrecall_project_context_pack = Project Truth Context (Brain data only).\n\nMCP tools:');
   printRows(PROJECT_BRAIN_TOOLS);
   console.log('\nUsage examples:\n  recall project --help\n  recall mcp   # expose tools to MCP clients');
+}
+
+function printContextHelp() {
+  console.log('Context Orchestrator Module\n\nTop-level context assembly across all 4 modules.\nrecall_context_pack = Full Agent Context (Brain + Memory + KB + CodeGraph).\n\nMCP tools:');
+  printRows(CONTEXT_TOOLS);
+  console.log('\nUsage examples:\n  recall context --help\n  recall mcp   # expose tools to MCP clients');
 }
 
 function startMcp() {
@@ -168,6 +182,14 @@ switch (command) {
     if (args.includes('--help') || args.includes('-h') || args.length === 1) printProjectBrainHelp();
     else {
       console.error('Unknown Project Brain command. Try: recall project --help');
+      process.exit(1);
+    }
+    break;
+  case 'context':
+  case 'orchestrator':
+    if (args.includes('--help') || args.includes('-h') || args.length === 1) printContextHelp();
+    else {
+      console.error('Unknown Context Orchestrator command. Try: recall context --help');
       process.exit(1);
     }
     break;

@@ -6,6 +6,7 @@ import { registerCodeGraphTools } from './modules/codegraph/tools.mjs';
 import { registerKnowledgeBaseTools } from './modules/knowledge-base/tools.mjs';
 import { registerMemoryTools } from './modules/memory/tools.mjs';
 import { registerProjectBrainTools } from './modules/project-brain/tools.mjs';
+import { registerContextOrchestratorTools } from './modules/context-orchestrator/tools.mjs';
 
 const mcpServer = new McpServer(
   { name: SERVER_NAME, version: SERVER_VERSION },
@@ -16,6 +17,7 @@ registerCodeGraphTools(mcpServer);
 registerKnowledgeBaseTools(mcpServer);
 registerMemoryTools(mcpServer);
 registerProjectBrainTools(mcpServer);
+registerContextOrchestratorTools(mcpServer);
 
 const transport = new StdioServerTransport();
 await mcpServer.connect(transport);
