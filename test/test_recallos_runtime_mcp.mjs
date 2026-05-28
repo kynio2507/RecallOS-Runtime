@@ -70,11 +70,23 @@ assert(byId.get(1)?.result?.serverInfo?.name === 'recallos-runtime', `initialize
 assert(byId.get(1)?.result?.serverInfo?.version === '1.0.0-local', 'wrong server version');
 const toolNames = byId.get(2)?.result?.tools?.map((tool) => tool.name).sort() || [];
 const expectedTools = [
+  'recall_agent_get',
+  'recall_agent_get_conversation',
+  'recall_agent_get_messages',
+  'recall_agent_handoff',
+  'recall_agent_handoff_list',
+  'recall_agent_handoff_update',
+  'recall_agent_list',
+  'recall_agent_register',
+  'recall_agent_send_message',
   'recall_codegraph_context',
   'recall_codegraph_impact',
   'recall_codegraph_search',
   'recall_codegraph_status',
   'recall_codegraph_symbol',
+  'recall_context_for_agent',
+  'recall_context_for_handoff',
+  'recall_context_for_pair',
   'recall_context_for_task',
   'recall_context_for_worker',
   'recall_context_pack',

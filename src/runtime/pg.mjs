@@ -179,6 +179,80 @@ export async function ensureMemorySchema() {
         UNIQUE(project_id, term)
       )
     `);
+
+    // --- Multi-Agent tables ---
+
+    // Agent Identity
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS agents (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        role TEXT NOT NULL,
+        model_id TEXT,
+        system_prompt TEXT,
+        capabilities_json JSONB DEFAULT '[]',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    // Agent Messages
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS agent_messages (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        workspace_id TEXT,
+        project_id TEXT DEFAULT 'default',
+        run_id TEXT,
+        task_id TEXT,
+        from_agent_id TEXT NOT NULL,
+        to_agent_id TEXT NOT NULL,
+        message_type TEXT NOT NULL DEFAULT 'message',
+        content TEXT NOT NULL,
+        summary TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await client.query('CREATE INDEX IF NOT EXISTS idx_messages_from ON agent_messages(from_agent_id)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_messages_to ON agent_messages(to_agent_id)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_messages_task ON agent_messages(task_id)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_messages_run ON agent_messages(run_id)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_messages_created ON agent_messages(created_at DESC)');
+
+    // Agent Handoffs
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS agent_handoffs (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        from_agent_id TEXT NOT NULL,
+        to_agent_id TEXT NOT NULL,
+        project_id TEXT DEFAULT 'default',
+        task_title TEXT NOT NULL,
+        task_payload_json JSONB DEFAULT '{}',
+        status TEXT NOT NULL DEFAULT 'pending',
+        result_summary TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await client.query('CREATE INDEX IF NOT EXISTS idx_handoffs_from ON agent_handoffs(from_agent_id)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_handoffs_to ON agent_handoffs(to_agent_id)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_handoffs_status ON agent_handoffs(status)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_handoffs_project ON agent_handoffs(project_id)');
+
+    // --- Expand memory_events scope ---
+    const eventCols = ['workspace_id TEXT', 'project_id TEXT', 'agent_id TEXT', 'task_id TEXT', 'run_id TEXT'];
+    for (const col of eventCols) {
+      const name = col.split(' ')[0];
+      try { await client.query(`ALTER TABLE memory_events ADD COLUMN ${col}`); } catch {}
+      try { await client.query(`CREATE INDEX IF NOT EXISTS idx_events_${name} ON memory_events(${name})`); } catch {}
+    }
+
+    // --- Expand memory_facts scope ---
+    const factCols = ['workspace_id TEXT', 'project_id TEXT', 'agent_id TEXT', 'pair_key TEXT', 'task_id TEXT', 'session_id TEXT', 'run_id TEXT'];
+    for (const col of factCols) {
+      const name = col.split(' ')[0];
+      try { await client.query(`ALTER TABLE memory_facts ADD COLUMN ${col}`); } catch {}
+      try { await client.query(`CREATE INDEX IF NOT EXISTS idx_facts_${name} ON memory_facts(${name})`); } catch {}
+    }
+
   } finally {
     client.release();
   }

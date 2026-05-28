@@ -7,6 +7,7 @@ import { registerKnowledgeBaseTools } from './modules/knowledge-base/tools.mjs';
 import { registerMemoryTools } from './modules/memory/tools.mjs';
 import { registerProjectBrainTools } from './modules/project-brain/tools.mjs';
 import { registerContextOrchestratorTools } from './modules/context-orchestrator/tools.mjs';
+import { registerAgentTools } from './modules/agents/tools.mjs';
 
 const mcpServer = new McpServer(
   { name: SERVER_NAME, version: SERVER_VERSION },
@@ -18,6 +19,7 @@ registerKnowledgeBaseTools(mcpServer);
 registerMemoryTools(mcpServer);
 registerProjectBrainTools(mcpServer);
 registerContextOrchestratorTools(mcpServer);
+registerAgentTools(mcpServer);
 
 const transport = new StdioServerTransport();
 await mcpServer.connect(transport);
