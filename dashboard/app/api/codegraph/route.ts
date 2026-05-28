@@ -75,16 +75,8 @@ export async function GET(req: Request) {
       `).all(...ids, ...ids);
     }
 
-    return NextResponse.json({
-      dbPath: getCodeGraphDbPath(),
-      counts,
-      kinds,
-      languages,
-      edgeKinds,
-      topFiles,
-      nodes,
-      relatedEdges,
-    });
+    db.close();
+    return NextResponse.json({ dbPath: getCodeGraphDbPath(), counts, kinds, languages, edgeKinds, topFiles, nodes, relatedEdges });
   } catch (e: unknown) {
     return NextResponse.json({ error: (e as Error).message, dbPath: getCodeGraphDbPath() }, { status: 500 });
   }

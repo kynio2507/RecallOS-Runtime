@@ -6,7 +6,8 @@ const NAV = [
   { href: "/", label: "Overview", icon: "◉" },
   { href: "/project-brain", label: "Project Brain", icon: "◈" },
   { href: "/memory", label: "Memory", icon: "◇" },
-  { href: "/codegraph-kb", label: "CodeGraph + KB", icon: "⬡" },
+  { href: "/codegraph", label: "CodeGraph", icon: "⬡" },
+  { href: "/knowledge-base", label: "Knowledge Base", icon: "▣" },
   { href: "/context-pack", label: "Context Pack", icon: "◆" },
 ];
 
