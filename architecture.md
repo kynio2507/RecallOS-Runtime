@@ -1,107 +1,66 @@
 # Architecture
 
-## Tổng quan
+## Overview
 
-`recallos-runtime` gồm 3 lớp:
+`recallos-runtime` is a multi-module MCP server with 3 modules:
 
 ```text
-MCP Tools (5 tools)
-  ↓ @modelcontextprotocol/sdk StdioServerTransport
-Knowledge Base + CodeGraph Server (recallos_runtime_mcp.mjs)
-  ↓
-SQLite Knowledge DB (better-sqlite3) + CodeGraph CLI (@colbymchenry/codegraph)
+MCP Server (recallos_runtime_mcp.mjs)
+  ├── Knowledge Base   → SQLite + FTS5
+  ├── CodeGraph        → MCP Client → CodeGraph MCP Server
+  └── Memory           → PostgreSQL + pgvector
 ```
 
-## Runtime components
+## Runtime Components
 
-| Component | Path | Mục đích |
+| Component | Purpose |
+|---|---|
+| MCP server | Expose tools via stdio MCP transport |
+| SQLite DB | Knowledge Base storage (FTS5 full-text search) |
+| Migration engine | Versioned SQL migrations (`migrations/*.sql`) |
+| CodeGraph MCP client | Connect to CodeGraph MCP server (replaces CLI/npx) |
+| PostgreSQL + pgvector | Memory module: raw events, active facts, vector chunks |
+| Embedding client | OpenAI-compatible endpoint for vector embeddings |
+
+## MCP Transport
+
+Uses `@modelcontextprotocol/sdk` with `StdioServerTransport`:
+
+- Newline-delimited JSON (`\n`), NOT Content-Length framing
+- Server handles `initialize` → `notifications/initialized` → tool calls
+
+## Schema Management
+
+### Migration Engine
+
+Schema changes use versioned SQL files:
+
+```text
+migrations/
+  001_initial_schema.sql    — base tables, indexes
+  002_fts5_knowledge.sql    — FTS5 virtual table + sync triggers
+```
+
+Applied migrations tracked in `schema_migrations` table. New migrations auto-apply on startup.
+
+### SQLite Schema (version 3)
+
+#### `schema_migrations`
+
+| Column | Type | Meaning |
 |---|---|---|
-| MCP server | `/path/to/recallos-runtime/src/recallos_runtime_mcp.mjs` | expose tools qua stdio MCP |
-| SQLite DB | `/path/to/recallos-runtime/data/recallos_runtime.sqlite` | lưu knowledge (21 items) |
-| Test script | `/path/to/recallos-runtime/test/test_recallos_runtime_mcp.mjs` | test protocol/tools |
-| CodeGraph index | `9base-ai-infra/.codegraph` | index source code (46 files, 312 nodes) |
-| SDK dependency | `@modelcontextprotocol/sdk` | MCP protocol transport |
-| SQLite driver | `better-sqlite3` | native SQLite bindings, stable |
+| `version` | INTEGER PK | migration version number |
+| `name` | TEXT | migration filename |
+| `applied_at` | TEXT | ISO timestamp |
 
-## MCP transport
-
-Sử dụng `@modelcontextprotocol/sdk` với `StdioServerTransport`:
-
-- Newline-delimited JSON (`\n`), **KHÔNG** dùng Content-Length framing
-- Server tự handle `initialize` → `notifications/initialized` → tool calls
-
-## MCP tools
-
-### `recall_kb_status`
-
-Trả:
-
-- server version (`1.0.0-local`)
-- schema version (`2`)
-- SQLite driver (`better-sqlite3`)
-- DB path, project path
-- count các bảng (knowledge_items, symbol_summaries, runtime_events, internal_events)
-- Recent errors
-- CodeGraph status
-
-### `recall_kb_query`
-
-Input:
-
-```json
-{
-  "question": "...",
-  "symbols": ["..."],
-  "mode": "debug",
-  "includeContext": true,
-  "includeImpact": true
-}
-```
-
-Luồng:
-
-```text
-question/symbols
-  ↓
-SQL knowledge ranking (score-based)
-  ↓
-CodeGraph query + context (symbol search, code snippets)
-  ↓
-markdown answer (knowledge + code context combined)
-```
-
-### `recall_kb_remember`
-
-Lưu knowledge dạng tự do. Hỗ trợ type:
-
-- `rule` — quy tắc phải tuân thủ
-- `decision` — quyết định kiến trúc
-- `bug` — bug history + root cause + fix
-- `note` — ghi chú kỹ thuật
-- `runtime` — sự kiện runtime đáng nhớ
-- `symbol_summary` — summary cho symbol/file
-- `architecture` — bản đồ kiến trúc module/system
-
-### `recall_kb_decision`
-
-Shortcut lưu architecture decision.
-
-### `recall_kb_bug`
-
-Shortcut lưu bug/root cause/fix.
-
-## SQLite schema (version 2)
-
-### `meta`
+#### `meta`
 
 | Column | Type | Meaning |
 |---|---|---|
 | `key` | TEXT PK | primary key |
 | `value` | TEXT | value |
 
-Current keys: `schema_version`, `server_version`, `project_path`, `db_path`, `mcp_transport`, `sqlite_driver`
-
-### `knowledge_items`
+#### `knowledge_items`
 
 | Column | Type | Meaning |
 |---|---|---|
@@ -115,27 +74,27 @@ Current keys: `schema_version`, `server_version`, `project_path`, `db_path`, `mc
 | `created_at` | TEXT | ISO timestamp |
 | `updated_at` | TEXT | ISO timestamp |
 
-### `symbol_summaries`
+#### `knowledge_items_fts` (FTS5 virtual table)
 
-| Column | Type | Meaning |
-|---|---|---|
-| `id` | TEXT PK | UUID |
-| `symbol` | TEXT | symbol name |
-| `summary` | TEXT | summary text |
-| `file_path` | TEXT | file location |
-| `created_at` | TEXT | ISO timestamp |
+Mirrors `knowledge_items` for full-text search. Auto-synced by triggers on INSERT/UPDATE/DELETE.
 
-### `internal_events`
+#### `symbol_summaries`, `runtime_events`, `internal_events`
 
-| Column | Type | Meaning |
-|---|---|---|
-| `id` | TEXT PK | UUID |
-| `level` | TEXT | info/warn/error |
-| `event` | TEXT | event name |
-| `detail` | TEXT | truncated detail |
-| `created_at` | TEXT | ISO timestamp |
+Same as before.
 
-## Ranking algorithm
+## Knowledge Base Search
+
+### FTS5 Path (default)
+
+```text
+query keywords → FTS5 MATCH → scoreRow() re-rank → top results
+```
+
+### LIKE Fallback
+
+If FTS5 unavailable, falls back to multi-column LIKE queries.
+
+### Ranking Algorithm
 
 | Match | Score |
 |---|---:|
@@ -146,87 +105,62 @@ Current keys: `schema_version`, `server_version`, `project_path`, `db_path`, `mc
 | content match | +10 |
 | type bug/decision/rule | +10 |
 
-## CodeGraph integration
+## CodeGraph Integration
 
-Current adapter:
+### MCP Client (current)
 
-```powershell
-cmd.exe /c npx -y @colbymchenry/codegraph ...
+CodeGraph module connects to CodeGraph MCP server via `@modelcontextprotocol/sdk` client:
+
+```text
+RecallOS Runtime → MCP Client → StdioClientTransport → CodeGraph MCP Server
 ```
 
-Used commands:
+Features:
+- Lazy connect on first call
+- Timeout with circuit breaker (default 30s)
+- `PROJECT_PATH` passed per call via `projectPath` parameter
+- No `execFileSync`, `cmd.exe`, or `npx` overhead
 
-| Command | Purpose |
+MCP tools called:
+
+| MCP Tool | Purpose |
 |---|---|
-| `status` | check index stats |
-| `query` | symbol search |
-| `context` | context/code snippets + caller/callee |
-| `affected` | affected tests/files |
+| `codegraph_status` | Index stats |
+| `codegraph_search` | Symbol search |
+| `codegraph_context` | Context/code snippets + callers/callees |
+| `codegraph_impact` | Affected tests/files |
 
-## Known architectural tradeoffs
-
-| Tradeoff | Reason |
-|---|---|
-| `better-sqlite3` | stable native bindings, replaces experimental `node:sqlite` |
-| `npx` runtime | easy install, but slower first run |
-| CLI CodeGraph | stable enough, but less rich than MCP callers/callees |
-| external DB | avoids touching 9Base app runtime |
-| `@modelcontextprotocol/sdk` | official SDK, handles protocol correctly |
 ## Memory Module
 
-RecallOS Runtime includes a 4-layer agent memory module:
+4-layer agent memory:
 
-| Layer | Storage | Purpose |
-|---|---|---|
-| Raw Memory | PostgreSQL `memory_events` | Store important raw events |
-| Active Memory | PostgreSQL `memory_facts` | Store compressed facts and profiles |
-| Context Index | PostgreSQL + pgvector `memory_chunks` | Semantic search over memory chunks |
-| Working Memory | In-process runtime state | Track current goal, task, open files, constraints, and pending questions |
+| Layer | Storage | Table | Purpose |
+|---|---|---|---|
+| Raw Memory | PostgreSQL | `memory_events` | Store raw events |
+| Active Memory | PostgreSQL | `memory_facts` | Store compressed facts |
+| Context Index | PostgreSQL + pgvector | `memory_chunks` | Semantic vector search |
+| Working Memory | In-process | runtime state | Current session state (auto-flush) |
 
-Memory tools:
-
-```text
-recall_memory_status
-recall_memory_write_event
-recall_memory_upsert_fact
-recall_memory_search
-recall_memory_get_profile
-recall_memory_summarize_session
-recall_memory_link
-```
-
-PostgreSQL + pgvector quick start:
-
-```powershell
-docker run -d --name recallos-pg -p 5432:5432 -e POSTGRES_USER=recallos -e POSTGRES_PASSWORD=recallos -e POSTGRES_DB=recallos_memory pgvector/pgvector:pg17
-```
-
-Embedding uses an OpenAI-compatible endpoint:
+### Hybrid Search
 
 ```text
-RECALLOS_EMBEDDING_ENDPOINT=https://your-router.example/v1/embeddings
-RECALLOS_EMBEDDING_MODEL=your-embedding-model
-RECALLOS_EMBEDDING_DIM=3072
+query → SQL ILIKE on events + facts
+      → pgvector cosine similarity on chunks
+      → merge + rank → top_k results
 ```
 
-Example event:
+### Embedding
 
-```json
-{
-  "actor": "main_agent",
-  "event_type": "observation",
-  "content": "RecallOS Memory stores raw events, active facts, vector context, and working memory.",
-  "embed": true
-}
-```
+Uses OpenAI-compatible endpoint. Auto-embeds events and facts into `memory_chunks`.
 
-Example fact:
+## Known Architectural Decisions
 
-```json
-{
-  "scope": "project",
-  "key": "memory_architecture",
-  "value": "4-layer memory: raw events, active facts, vector context, working state",
-  "confidence": 1
-}
-```
+| Decision | Reason |
+|---|---|
+| `better-sqlite3` | Stable native bindings, replaces experimental `node:sqlite` |
+| FTS5 | Fast full-text search with ranking, replaces multi-column LIKE |
+| Migration engine | Versioned schema changes, no more inline SQL |
+| MCP client for CodeGraph | Faster and more reliable than CLI/npx spawn |
+| PostgreSQL for Memory | JSONB, UUID, pgvector — features SQLite lacks |
+| External DB | Avoids touching target app runtime |
+| `@modelcontextprotocol/sdk` | Official SDK, handles protocol correctly |
