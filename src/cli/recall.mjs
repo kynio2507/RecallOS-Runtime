@@ -34,6 +34,18 @@ const MEMORY_TOOLS = [
   ['recall_memory_link', 'Link two memory items by relation'],
 ];
 
+const PROJECT_BRAIN_TOOLS = [
+  ['recall_project_overview', 'Get project overview: name, modules, stats'],
+  ['recall_project_modules', 'List project modules with status and purpose'],
+  ['recall_project_get_doc', 'Get project doc by title or type'],
+  ['recall_project_upsert_doc', 'Create or update project documentation'],
+  ['recall_project_roadmap', 'List roadmap items by status/priority'],
+  ['recall_project_add_decision', 'Record architecture/design decision'],
+  ['recall_project_search', 'Search across all Project Brain tables'],
+  ['recall_project_context_pack', 'CRITICAL: Assemble full context for a task'],
+  ['recall_project_status', 'Show Project Brain table counts'],
+];
+
 function printRows(rows) {
   const width = Math.max(...rows.map(([name]) => name.length));
   for (const [name, description] of rows) {
@@ -55,6 +67,7 @@ Commands:
   codegraph --help     Show CodeGraph module tools
   kb --help            Show Knowledge Base module tools
   memory --help        Show Memory module tools
+  project --help       Show Project Brain module tools
   mcp                  Start MCP stdio server
 
 Examples:
@@ -63,6 +76,7 @@ Examples:
   recall codegraph --help
   recall kb --help
   recall memory --help
+  recall project --help
   recall mcp
 `);
 }
@@ -72,7 +86,7 @@ function printVersion() {
 }
 
 function printModules() {
-  console.log(`RecallOS Runtime modules\n\n  CodeGraph       Source graph, code context, symbol analysis, impact analysis\n  Knowledge Base  Persistent SQLite knowledge, decisions, bugs, and rules\n  Memory          4-layer agent memory: raw events, active facts, vector context, working state`);
+  console.log(`RecallOS Runtime modules\n\n  CodeGraph       Source graph, code context, symbol analysis, impact analysis\n  Knowledge Base  Persistent SQLite knowledge, decisions, bugs, and rules\n  Memory          4-layer agent memory: raw events, active facts, vector context, working state\n  Project Brain   Project knowledge: docs, modules, roadmap, decisions, glossary, context pack`);
 }
 
 function printCodeGraphHelp() {
@@ -91,6 +105,12 @@ function printMemoryHelp() {
   console.log('Memory Module\n\n4-layer agent memory: PostgreSQL raw events, active facts, pgvector context index, and in-process working memory.\n\nMCP tools:');
   printRows(MEMORY_TOOLS);
   console.log('\nUsage examples:\n  recall memory --help\n  recall mcp   # expose tools to MCP clients');
+}
+
+function printProjectBrainHelp() {
+  console.log('Project Brain Module\n\nProject knowledge base: docs, modules, roadmap, decisions, glossary.\nCritical tool: recall_project_context_pack — assembles full context for a task.\n\nMCP tools:');
+  printRows(PROJECT_BRAIN_TOOLS);
+  console.log('\nUsage examples:\n  recall project --help\n  recall mcp   # expose tools to MCP clients');
 }
 
 function startMcp() {
@@ -140,6 +160,14 @@ switch (command) {
     if (args.includes('--help') || args.includes('-h') || args.length === 1) printMemoryHelp();
     else {
       console.error('Unknown Memory command. Try: recall memory --help');
+      process.exit(1);
+    }
+    break;
+  case 'project':
+  case 'brain':
+    if (args.includes('--help') || args.includes('-h') || args.length === 1) printProjectBrainHelp();
+    else {
+      console.error('Unknown Project Brain command. Try: recall project --help');
       process.exit(1);
     }
     break;

@@ -104,6 +104,81 @@ export async function ensureMemorySchema() {
     await client.query('CREATE INDEX IF NOT EXISTS idx_links_relation ON memory_links(relation)');
 
     _schemaReady = true;
+
+    // --- Project Brain tables ---
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS project_docs (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        project_id TEXT NOT NULL DEFAULT 'default',
+        doc_type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'active',
+        version INTEGER NOT NULL DEFAULT 1,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await client.query('CREATE INDEX IF NOT EXISTS idx_docs_project ON project_docs(project_id)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_docs_type ON project_docs(doc_type)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_docs_status ON project_docs(status)');
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS project_modules (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        project_id TEXT NOT NULL DEFAULT 'default',
+        name TEXT NOT NULL,
+        purpose TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'active',
+        owner TEXT,
+        metadata JSONB DEFAULT '{}',
+        UNIQUE(project_id, name)
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS project_decisions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        project_id TEXT NOT NULL DEFAULT 'default',
+        title TEXT NOT NULL,
+        decision TEXT NOT NULL,
+        reason TEXT,
+        alternatives TEXT,
+        impact TEXT,
+        status TEXT NOT NULL DEFAULT 'accepted',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await client.query('CREATE INDEX IF NOT EXISTS idx_decisions_project ON project_decisions(project_id)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_decisions_status ON project_decisions(status)');
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS project_roadmap_items (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        project_id TEXT NOT NULL DEFAULT 'default',
+        title TEXT NOT NULL,
+        description TEXT,
+        priority TEXT NOT NULL DEFAULT 'medium',
+        status TEXT NOT NULL DEFAULT 'planned',
+        milestone TEXT,
+        due_date TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await client.query('CREATE INDEX IF NOT EXISTS idx_roadmap_project ON project_roadmap_items(project_id)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_roadmap_status ON project_roadmap_items(status)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_roadmap_priority ON project_roadmap_items(priority)');
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS project_glossary (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        project_id TEXT NOT NULL DEFAULT 'default',
+        term TEXT NOT NULL,
+        definition TEXT NOT NULL,
+        aliases TEXT[] DEFAULT '{}',
+        UNIQUE(project_id, term)
+      )
+    `);
   } finally {
     client.release();
   }

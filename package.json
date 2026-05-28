@@ -14,6 +14,7 @@
     "help": "node ./src/cli/recall.mjs --help",
     "test": "node ./test/test_recallos_runtime_mcp.mjs",
     "test:memory": "node ./test/test_memory_module.mjs",
+    "test:brain": "node ./test/test_project_brain.mjs",
     "status": "node ./src/cli/recall.mjs modules"
   },
   "dependencies": {

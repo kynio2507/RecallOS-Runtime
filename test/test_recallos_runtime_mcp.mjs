@@ -87,6 +87,15 @@ const expectedTools = [
   'recall_memory_summarize_session',
   'recall_memory_upsert_fact',
   'recall_memory_write_event',
+  'recall_project_add_decision',
+  'recall_project_context_pack',
+  'recall_project_get_doc',
+  'recall_project_modules',
+  'recall_project_overview',
+  'recall_project_roadmap',
+  'recall_project_search',
+  'recall_project_status',
+  'recall_project_upsert_doc',
 ].sort();
 assert(JSON.stringify(toolNames) === JSON.stringify(expectedTools), `tools/list mismatch, got ${JSON.stringify(toolNames)}`);
 
