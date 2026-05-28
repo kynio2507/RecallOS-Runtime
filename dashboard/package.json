@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 3303",
+    "dev:trace": "node --require ./scripts/trace-fetch.cjs ./node_modules/next/dist/bin/next dev --turbopack -p 3303",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
