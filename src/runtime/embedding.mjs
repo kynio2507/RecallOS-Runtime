@@ -1,19 +1,23 @@
-const EMBEDDING_ENABLED = String(process.env.RECALLOS_EMBEDDING_ENABLED || '').toLowerCase() === 'true';
-const EMBEDDING_ENDPOINT = process.env.RECALLOS_EMBEDDING_ENDPOINT || '';
+const EMBEDDING_ENDPOINT = process.env.RECALLOS_EMBEDDING_ENDPOINT || 'https://9router.may365.cloud/v1/embeddings';
 const EMBEDDING_MODEL = process.env.RECALLOS_EMBEDDING_MODEL || 'gemini/gemini-embedding-2-preview';
 const EMBEDDING_API_KEY = process.env.RECALLOS_EMBEDDING_API_KEY || process.env.OPENAI_API_KEY || '';
 
-let _warnedDisabled = false;
+// Block expensive chat models from being used as embedding model
+const BLOCKED_MODELS = /opus|sonnet|gpt-4|gpt-3\.5|claude|thinking/i;
+
+let _warnedBlocked = false;
 
 export async function getEmbedding(text) {
-  if (!EMBEDDING_ENABLED) {
-    if (!_warnedDisabled && process.env.RECALLOS_EMBEDDING_DEBUG === 'true') {
-      console.error('[RecallOS Embedding] Disabled. Set RECALLOS_EMBEDDING_ENABLED=true to allow external embedding calls.');
-      _warnedDisabled = true;
+  if (!EMBEDDING_ENDPOINT || !EMBEDDING_API_KEY) return null;
+
+  if (BLOCKED_MODELS.test(EMBEDDING_MODEL)) {
+    if (!_warnedBlocked) {
+      console.error(`[RecallOS Embedding] BLOCKED: model "${EMBEDDING_MODEL}" is a chat model, not an embedding model. Fix RECALLOS_EMBEDDING_MODEL.`);
+      _warnedBlocked = true;
     }
     return null;
   }
-  if (!EMBEDDING_ENDPOINT || !EMBEDDING_API_KEY) return null;
+
   try {
     if (process.env.RECALLOS_EMBEDDING_DEBUG === 'true') {
       console.error(`[RecallOS Embedding] Calling ${EMBEDDING_ENDPOINT} model=${EMBEDDING_MODEL}`);
@@ -52,5 +56,5 @@ export function getEmbeddingDim() {
 }
 
 export function isEmbeddingEnabled() {
-  return EMBEDDING_ENABLED;
+  return !!(EMBEDDING_ENDPOINT && EMBEDDING_API_KEY && !BLOCKED_MODELS.test(EMBEDDING_MODEL));
 }
