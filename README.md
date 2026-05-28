@@ -11,6 +11,8 @@ RecallOS Runtime is a multi-module MCP/server tool platform for Antigravity and 
 - **Knowledge Base** — SQLite knowledge memory with FTS5 full-text search, bug history, architecture decisions, notes, and rules.
 - **CodeGraph** — Source graph search, code context, symbol analysis, and impact analysis via MCP client.
 - **Memory** — 4-layer agent memory: PostgreSQL raw events, active facts, pgvector semantic search, and in-process working memory.
+- **Project Brain** — Project truth: docs, modules, roadmap, decisions, glossary, conventions.
+- **Context Orchestrator** — Top-level context assembly across all modules.
 
 > [!IMPORTANT]
 > RecallOS Runtime now exposes strict module-specific MCP tools only.
@@ -29,14 +31,13 @@ RecallOS Runtime is a multi-module MCP/server tool platform for Antigravity and 
 | Schema management | SQL migration engine (`migrations/*.sql`) |
 | PostgreSQL | `pgvector/pgvector:pg17` (Docker) |
 | CodeGraph backend | MCP client (replaces CLI/npx) |
-| DB path | `/path/to/recallos-runtime/data/recallos_runtime.sqlite` |
-| Project path | `/path/to/project` |
-| Tool namespaces | `recall_kb_*`, `recall_codegraph_*`, `recall_memory_*` |
+| Tool namespaces | `recall_kb_*`, `recall_codegraph_*`, `recall_memory_*`, `recall_project_*`, `recall_context_*` |
+| Total tools | 29 |
 | Stability | production-grade local |
 
 ## Tools
 
-### Knowledge Base
+### Knowledge Base (5 tools)
 
 | Tool | Purpose |
 |---|---|
@@ -46,7 +47,7 @@ RecallOS Runtime is a multi-module MCP/server tool platform for Antigravity and 
 | `recall_kb_decision` | Store architecture decisions |
 | `recall_kb_bug` | Store bug root cause and fix history |
 
-### CodeGraph
+### CodeGraph (5 tools)
 
 | Tool | Purpose |
 |---|---|
@@ -56,7 +57,7 @@ RecallOS Runtime is a multi-module MCP/server tool platform for Antigravity and 
 | `recall_codegraph_symbol` | Analyze a symbol with search/context/impact |
 | `recall_codegraph_impact` | Find affected files/tests for a target |
 
-### Memory
+### Memory (7 tools)
 
 | Tool | Purpose |
 |---|---|
@@ -68,80 +69,54 @@ RecallOS Runtime is a multi-module MCP/server tool platform for Antigravity and 
 | `recall_memory_summarize_session` | Summarize session events into structured facts |
 | `recall_memory_link` | Create relation link between two memory items |
 
-## Architecture
+### Project Brain (9 tools)
 
-### Migration Engine
+| Tool | Purpose |
+|---|---|
+| `recall_project_overview` | Get project overview: modules, stats, current work |
+| `recall_project_modules` | List project modules with status and purpose |
+| `recall_project_get_doc` | Get project doc by title or type |
+| `recall_project_upsert_doc` | Create or update project documentation (auto-version) |
+| `recall_project_roadmap` | List roadmap items by status/priority |
+| `recall_project_add_decision` | Record architecture/design decision |
+| `recall_project_search` | Full-text search across all Project Brain tables |
+| `recall_project_context_pack` | **Project Truth Context**: overview + architecture + modules + decisions + roadmap + glossary (Brain data only) |
+| `recall_project_status` | Show Project Brain table counts |
 
-Schema changes are managed by versioned SQL migration files:
+### Context Orchestrator (3 tools)
 
-```text
-migrations/
-  001_initial_schema.sql    — base tables, indexes
-  002_fts5_knowledge.sql    — FTS5 virtual table + sync triggers
-```
-
-Applied migrations are tracked in `schema_migrations`:
-
-```sql
-CREATE TABLE schema_migrations (
-  version INTEGER PRIMARY KEY,
-  name TEXT NOT NULL,
-  applied_at TEXT NOT NULL
-);
-```
-
-Adding new tables: create `migrations/003_your_change.sql`. Migrator auto-applies on startup.
-
-### FTS5 Full-Text Search
-
-Knowledge Base uses SQLite FTS5 for fast full-text search:
-
-```sql
-CREATE VIRTUAL TABLE knowledge_items_fts USING fts5(
-  title, content, symbols_json, files_json, tags_json,
-  content=knowledge_items, content_rowid=rowid
-);
-```
-
-Auto-sync triggers keep FTS5 in sync on INSERT/UPDATE/DELETE. Falls back to LIKE if FTS5 is unavailable.
-
-### CodeGraph MCP Client
-
-CodeGraph module connects to the CodeGraph MCP server via MCP client SDK (replaces CLI/npx):
-
-- Lazy connect on first call
-- Timeout with circuit breaker (default 30s, configurable via `RECALLOS_CODEGRAPH_TIMEOUT`)
-- `PROJECT_PATH` passed per call via `projectPath` parameter
-- No more `execFileSync`, `cmd.exe`, or `npx` overhead
-
-### Memory Module
-
-4-layer agent memory:
-
-| Layer | Storage | Table |
+| Tool | For | Sources |
 |---|---|---|
-| Raw Memory | PostgreSQL | `memory_events` |
-| Active Memory | PostgreSQL | `memory_facts` |
-| Context Index | PostgreSQL + pgvector | `memory_chunks` |
-| Working Memory | In-process | runtime state (auto-flush) |
+| `recall_context_pack` | Agent chính | **Full**: Project Brain + Memory + KB + CodeGraph |
+| `recall_context_for_task` | Task cụ thể | **Focused**: decisions + roadmap + bugs + code context |
+| `recall_context_for_worker` | Sub-agent | **Minimal**: modules + conventions + rules + preferences |
 
-PostgreSQL + pgvector quick start:
+> [!TIP]
+> `recall_context_pack` is the recommended first call before starting any meaningful work. It assembles context from ALL modules in one response.
 
-```powershell
-docker run -d --name recallos-pg -p 5432:5432 \
-  -e POSTGRES_USER=recallos \
-  -e POSTGRES_PASSWORD=recallos \
-  -e POSTGRES_DB=recallos_memory \
-  pgvector/pgvector:pg17
-```
-
-Embedding uses an OpenAI-compatible endpoint:
+## Module Boundaries
 
 ```text
-RECALLOS_EMBEDDING_ENDPOINT=https://your-router.example/v1/embeddings
-RECALLOS_EMBEDDING_MODEL=your-embedding-model
-RECALLOS_EMBEDDING_DIM=3072
+┌──────────────────────────────────────────────┐
+│           Context Orchestrator               │
+│  recall_context_pack                         │
+│  recall_context_for_task                     │
+│  recall_context_for_worker                   │
+├──────────────┬───────────┬───────┬───────────┤
+│ Project Brain│  Memory   │  KB   │ CodeGraph │
+│ docs/roadmap │ events    │ bugs  │ symbols   │
+│ modules      │ facts     │ rules │ callers   │
+│ decisions    │ chunks    │ notes │ context   │
+│ glossary     │ working   │       │ impact    │
+└──────────────┴───────────┴───────┴───────────┘
 ```
+
+| Module | Stores | When to use |
+|---|---|---|
+| **Knowledge Base** | bug/fix/rule/technical notes | Debug, code convention, known issues |
+| **Project Brain** | project truth/docs/roadmap/architecture | Project structure, planning, decisions |
+| **Memory** | agent/user/session/task memory | User preferences, session history, agent context |
+| **CodeGraph** | source code intelligence | Symbol search, code context, callers/callees, impact |
 
 ## Environment Variables
 
@@ -163,23 +138,6 @@ RECALLOS_EMBEDDING_DIM=3072
 | `RECALLOS_EMBEDDING_API_KEY` | (none) | Embedding API key |
 | `RECALLOS_EMBEDDING_DIM` | `3072` | Embedding vector dimension |
 
-## Required Agent Workflow
-
-All agents working on 9Base must use RecallOS Runtime before meaningful work.
-
-Minimum required behavior:
-
-```text
-1. Query RecallOS Runtime / Knowledge Base + CodeGraph before work.
-2. Verify important facts against current source code.
-3. Update RecallOS Runtime after meaningful work.
-```
-
-See:
-
-- [agent-pipeline.md](agent-pipeline.md)
-- [agent-policy.md](agent-policy.md)
-
 ## Quick Start
 
 ### Install
@@ -188,32 +146,35 @@ See:
 npm install
 ```
 
+### PostgreSQL (for Memory + Project Brain)
+
+```powershell
+docker run -d --name recallos-pg -p 5432:5432 \
+  -e POSTGRES_USER=recallos \
+  -e POSTGRES_PASSWORD=recallos \
+  -e POSTGRES_DB=recallos_memory \
+  pgvector/pgvector:pg17
+```
+
 ### CLI help
 
 ```powershell
 npm run help
-node ./src/cli/recall.mjs --help
-node ./src/cli/recall.mjs codegraph --help
-node ./src/cli/recall.mjs kb --help
-node ./src/cli/recall.mjs memory --help
-```
-
-After linking/installing globally:
-
-```powershell
 recall --help
 recall modules
 recall codegraph --help
 recall kb --help
 recall memory --help
-recall mcp
+recall project --help
+recall context --help
 ```
 
 ### Test
 
 ```powershell
-npm test              # MCP wiring + KB + CodeGraph + Memory tools
-npm run test:memory   # Memory module DB integration (requires PostgreSQL)
+npm test              # MCP wiring (all 29 tools)
+npm run test:memory   # Memory module DB integration
+npm run test:brain    # Project Brain DB integration
 ```
 
 Expected:
@@ -221,21 +182,7 @@ Expected:
 ```text
 PASS RecallOS Runtime MCP tests
 PASS RecallOS Memory module tests
-```
-
-### Test in Antigravity
-
-Call:
-
-```text
-recall_kb_status
-```
-
-Expected output includes:
-
-```text
-FTS5: enabled
-Migrations: [...]
+PASS RecallOS Project Brain tests
 ```
 
 ## Documentation
