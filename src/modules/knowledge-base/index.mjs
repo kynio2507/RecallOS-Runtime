@@ -21,10 +21,57 @@ export function scoreRow(row, keywords, symbols) {
   return score;
 }
 
+function hasFts5(database) {
+  try {
+    database.prepare("SELECT 1 FROM knowledge_items_fts LIMIT 0").run();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function buildFtsQuery(keywords) {
+  // Escape FTS5 special characters and join with OR
+  return keywords
+    .map(k => `"${k.replace(/"/g, '""')}"`)
+    .join(' OR ');
+}
+
 export function searchKnowledge(database, question, symbols = [], limit = 8, type = null, tags = []) {
   const keywords = [...String(question || '').split(/\s+/), ...(symbols || []), ...(tags || [])]
     .map((term) => term.trim()).filter((term) => term.length >= 3).slice(0, 20);
   if (!keywords.length) return [];
+
+  let rows;
+
+  if (hasFts5(database)) {
+    // FTS5 path: fast full-text search
+    const ftsQuery = buildFtsQuery(keywords);
+    let sql = `SELECT ki.*, rank FROM knowledge_items_fts
+      JOIN knowledge_items ki ON knowledge_items_fts.rowid = ki.rowid
+      WHERE knowledge_items_fts MATCH ?`;
+    const params = [ftsQuery];
+    if (type) { sql += ' AND ki.type = ?'; params.push(type); }
+    sql += ' ORDER BY rank LIMIT 80';
+    try {
+      rows = database.prepare(sql).all(...params);
+    } catch {
+      // Fallback to LIKE if FTS query fails (e.g. bad syntax)
+      rows = searchKnowledgeLike(database, keywords, type);
+    }
+  } else {
+    // LIKE fallback path: no FTS5 table
+    rows = searchKnowledgeLike(database, keywords, type);
+  }
+
+  return rows
+    .map((row) => ({ ...row, _score: scoreRow(row, keywords, symbols) }))
+    .filter((row) => row._score > 0)
+    .sort((a, b) => b._score - a._score || String(b.updated_at).localeCompare(String(a.updated_at)))
+    .slice(0, limit);
+}
+
+function searchKnowledgeLike(database, keywords, type) {
   const clauses = [];
   const params = [];
   for (const keyword of keywords) {
@@ -35,12 +82,7 @@ export function searchKnowledge(database, question, symbols = [], limit = 8, typ
   let sql = `SELECT * FROM knowledge_items WHERE (${clauses.join(' OR ')})`;
   if (type) { sql += ' AND type = ?'; params.push(type); }
   sql += ' LIMIT 80';
-  const rows = database.prepare(sql).all(...params);
-  return rows
-    .map((row) => ({ ...row, _score: scoreRow(row, keywords, symbols) }))
-    .filter((row) => row._score > 0)
-    .sort((a, b) => b._score - a._score || String(b.updated_at).localeCompare(String(a.updated_at)))
-    .slice(0, limit);
+  return database.prepare(sql).all(...params);
 }
 
 export function formatKnowledge(rows) {
@@ -77,7 +119,9 @@ export function getKnowledgeStatus(database) {
     runtime_events: database.prepare('SELECT COUNT(*) AS count FROM runtime_events').get().count,
     internal_events: database.prepare('SELECT COUNT(*) AS count FROM internal_events').get().count,
   };
+  const fts5 = hasFts5(database) ? 'enabled' : 'disabled';
+  const migrations = database.prepare('SELECT version, name, applied_at FROM schema_migrations ORDER BY version').all();
   const meta = database.prepare('SELECT key, value FROM meta ORDER BY key').all();
   const recentErrors = database.prepare("SELECT event, detail, created_at FROM internal_events WHERE level = 'error' ORDER BY created_at DESC LIMIT 5").all();
-  return `# Knowledge Base Module Status\n\nServer: ${SERVER_NAME} ${SERVER_VERSION}\nSQLite driver: better-sqlite3\nDB: ${DB_PATH}\nProject: ${PROJECT_PATH}\n\n## Meta\n\n${JSON.stringify(meta, null, 2)}\n\n## SQL Counts\n\n${JSON.stringify(counts, null, 2)}\n\n## Recent Errors\n\n${JSON.stringify(recentErrors, null, 2)}`;
+  return `# Knowledge Base Module Status\n\nServer: ${SERVER_NAME} ${SERVER_VERSION}\nSQLite driver: better-sqlite3\nFTS5: ${fts5}\nDB: ${DB_PATH}\nProject: ${PROJECT_PATH}\n\n## Migrations\n\n${JSON.stringify(migrations, null, 2)}\n\n## Meta\n\n${JSON.stringify(meta, null, 2)}\n\n## SQL Counts\n\n${JSON.stringify(counts, null, 2)}\n\n## Recent Errors\n\n${JSON.stringify(recentErrors, null, 2)}`;
 }
