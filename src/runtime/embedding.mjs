@@ -1,10 +1,23 @@
+const EMBEDDING_ENABLED = String(process.env.RECALLOS_EMBEDDING_ENABLED || '').toLowerCase() === 'true';
 const EMBEDDING_ENDPOINT = process.env.RECALLOS_EMBEDDING_ENDPOINT || '';
 const EMBEDDING_MODEL = process.env.RECALLOS_EMBEDDING_MODEL || 'gemini/gemini-embedding-2-preview';
 const EMBEDDING_API_KEY = process.env.RECALLOS_EMBEDDING_API_KEY || process.env.OPENAI_API_KEY || '';
 
+let _warnedDisabled = false;
+
 export async function getEmbedding(text) {
+  if (!EMBEDDING_ENABLED) {
+    if (!_warnedDisabled && process.env.RECALLOS_EMBEDDING_DEBUG === 'true') {
+      console.error('[RecallOS Embedding] Disabled. Set RECALLOS_EMBEDDING_ENABLED=true to allow external embedding calls.');
+      _warnedDisabled = true;
+    }
+    return null;
+  }
   if (!EMBEDDING_ENDPOINT || !EMBEDDING_API_KEY) return null;
   try {
+    if (process.env.RECALLOS_EMBEDDING_DEBUG === 'true') {
+      console.error(`[RecallOS Embedding] Calling ${EMBEDDING_ENDPOINT} model=${EMBEDDING_MODEL}`);
+    }
     const response = await fetch(EMBEDDING_ENDPOINT, {
       method: 'POST',
       headers: {
@@ -36,4 +49,8 @@ export async function getEmbedding(text) {
 
 export function getEmbeddingDim() {
   return parseInt(process.env.RECALLOS_EMBEDDING_DIM || '3072', 10);
+}
+
+export function isEmbeddingEnabled() {
+  return EMBEDDING_ENABLED;
 }
