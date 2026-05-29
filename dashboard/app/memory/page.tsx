@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import { CommandBar, DataCard, EmptyState, MetricTile, PageHeader, SectionTitle, StatusPill } from "../components/ui";
 
 interface MemEvent { id: string; session_id: string; actor: string; event_type: string; content: string; agent_id?: string; task_id?: string; run_id?: string; created_at: string; }
 interface MemFact { id: string; scope: string; key: string; value: string; confidence: number; agent_id?: string; pair_key?: string; task_id?: string; session_id?: string; run_id?: string; updated_at: string; }
@@ -8,84 +9,33 @@ interface Link { id: string; source_id: string; target_id: string; relation: str
 interface Counts { events: number; facts: number; chunks: number; links: number; embedded_chunks: number; }
 interface Layer { id: string; name: string; count: number; description: string; }
 interface Dist { scope?: string; event_type?: string; actor?: string; session_id?: string; count: number; last_seen?: string; }
-
 const TABS = ["Raw Events", "Active Facts", "Context Chunks", "Working Memory", "Search"];
 
 export default function MemoryPage() {
   const [tab, setTab] = useState("Raw Events");
-  const [events, setEvents] = useState<MemEvent[]>([]);
-  const [facts, setFacts] = useState<MemFact[]>([]);
-  const [chunks, setChunks] = useState<Chunk[]>([]);
-  const [links, setLinks] = useState<Link[]>([]);
+  const [events, setEvents] = useState<MemEvent[]>([]); const [facts, setFacts] = useState<MemFact[]>([]); const [chunks, setChunks] = useState<Chunk[]>([]); const [links, setLinks] = useState<Link[]>([]);
   const [counts, setCounts] = useState<Counts>({ events: 0, facts: 0, chunks: 0, links: 0, embedded_chunks: 0 });
-  const [layers, setLayers] = useState<Layer[]>([]);
-  const [scopes, setScopes] = useState<Dist[]>([]);
-  const [eventTypes, setEventTypes] = useState<Dist[]>([]);
-  const [actors, setActors] = useState<Dist[]>([]);
-  const [sessions, setSessions] = useState<Dist[]>([]);
-  const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const fetchData = useCallback((q = "") => {
-    setLoading(true); setError("");
-    const params = new URLSearchParams();
-    if (q) params.set("query", q);
-    fetch(`/api/memory?${params}`)
-      .then(r => r.json())
-      .then(d => {
-        if (d.error) setError(d.error);
-        setEvents(d.events || []); setFacts(d.facts || []); setChunks(d.chunks || []); setLinks(d.links || []);
-        setCounts(d.counts || {}); setLayers(d.layers || []); setScopes(d.scopes || []); setEventTypes(d.eventTypes || []); setActors(d.actors || []); setSessions(d.sessions || []);
-        setLoading(false);
-      })
-      .catch(e => { setError(String(e)); setLoading(false); });
-  }, []);
-
+  const [layers, setLayers] = useState<Layer[]>([]); const [scopes, setScopes] = useState<Dist[]>([]); const [eventTypes, setEventTypes] = useState<Dist[]>([]); const [actors, setActors] = useState<Dist[]>([]); const [sessions, setSessions] = useState<Dist[]>([]);
+  const [query, setQuery] = useState(""); const [loading, setLoading] = useState(true); const [error, setError] = useState("");
+  const fetchData = useCallback((q = "") => { setLoading(true); setError(""); const params = new URLSearchParams(); if (q) params.set("query", q); fetch(`/api/memory?${params}`).then(r=>r.json()).then(d=>{ if(d.error) setError(d.error); setEvents(d.events||[]); setFacts(d.facts||[]); setChunks(d.chunks||[]); setLinks(d.links||[]); setCounts(d.counts||{}); setLayers(d.layers||[]); setScopes(d.scopes||[]); setEventTypes(d.eventTypes||[]); setActors(d.actors||[]); setSessions(d.sessions||[]); setLoading(false); }).catch(e=>{ setError(String(e)); setLoading(false); }); }, []);
   useEffect(() => { fetchData(); }, [fetchData]);
   const handleSearch = () => { setTab("Search"); fetchData(query); };
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Memory</h1>
-        <p className="text-sm text-[var(--muted)] mt-2">Four-layer agent memory: raw events, active facts, vector context, working relations.</p>
-      </div>
-
-      {error && <div className="card border border-rose-500/40 text-rose-300">{error}</div>}
-
-      <div className="grid md:grid-cols-4 gap-3">
-        {layers.map((l, i) => <div key={l.id} className="card bg-gradient-to-br from-indigo-500/10 to-fuchsia-500/5"><div className="flex items-center justify-between"><span className="badge blue">L{i+1}</span><span className="text-2xl font-bold text-indigo-300">{l.count}</span></div><h3 className="font-semibold mt-3">{l.name}</h3><p className="text-xs text-[var(--muted)] mt-2">{l.description}</p></div>)}
-      </div>
-
-      <div className="grid xl:grid-cols-4 gap-3">
-        <div className="card"><h3 className="text-sm font-semibold mb-2">Scopes</h3><div className="flex gap-2 flex-wrap">{scopes.map(s => <span key={s.scope} className="badge blue">{s.scope}: {s.count}</span>)}</div></div>
-        <div className="card"><h3 className="text-sm font-semibold mb-2">Event types</h3><div className="flex gap-2 flex-wrap">{eventTypes.map(e => <span key={e.event_type} className="badge gray">{e.event_type}: {e.count}</span>)}</div></div>
-        <div className="card"><h3 className="text-sm font-semibold mb-2">Actors</h3><div className="flex gap-2 flex-wrap">{actors.map(a => <span key={a.actor} className="badge green">{a.actor}: {a.count}</span>)}</div></div>
-        <div className="card"><h3 className="text-sm font-semibold mb-2">Sessions</h3><div className="space-y-1 text-xs text-[var(--muted)]">{sessions.map(s => <div key={s.session_id} className="truncate">{s.session_id}: {s.count}</div>)}</div></div>
-      </div>
-
-      <div className="flex flex-wrap gap-2 items-center">
-        <div className="flex gap-1 p-1 bg-[var(--surface)] rounded-lg w-fit">
-          {TABS.map(t => <button key={t} onClick={() => setTab(t)} className={`tab ${tab === t ? "active" : ""}`}>{t}</button>)}
-        </div>
-        <div className="flex gap-2 ml-auto">
-          <input type="text" placeholder="Search memory..." value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSearch()} className="max-w-md" />
-          <button onClick={handleSearch} className="btn btn-primary">Search</button>
-        </div>
-      </div>
-
-      {loading ? <div className="text-[var(--muted)] animate-pulse">Loading...</div> : (
-        <>
-          {(tab === "Raw Events" || tab === "Search") && <div className="grid gap-2"><h2 className="font-semibold">Layer A · Raw Events ({counts.events})</h2>{events.map(e => <div key={e.id} className="card py-3"><div className="flex items-center gap-2 mb-1"><span className="badge blue">{e.event_type}</span><span className="badge gray">{e.actor}</span>{e.agent_id && <span className="badge green">{e.agent_id}</span>}<span className="text-xs text-[var(--muted)] ml-auto">{new Date(e.created_at).toLocaleString()}</span></div><p className="text-sm text-zinc-300 whitespace-pre-wrap">{e.content}</p><div className="text-xs text-[var(--muted)] mt-2">session={e.session_id} task={e.task_id || "-"} run={e.run_id || "-"}</div></div>)}</div>}
-
-          {(tab === "Active Facts" || tab === "Search") && <div className="grid gap-2"><h2 className="font-semibold">Layer B · Active Facts ({counts.facts})</h2>{facts.map(f => <div key={f.id} className="card py-3"><div className="flex items-center gap-2 mb-1"><span className="badge blue">{f.scope}</span><span className="font-mono text-sm text-indigo-400">{f.key}</span>{f.agent_id && <span className="badge green">{f.agent_id}</span>}{f.pair_key && <span className="badge yellow">{f.pair_key}</span>}<span className="text-xs text-[var(--muted)] ml-auto">conf: {f.confidence}</span></div><p className="text-sm text-zinc-300 whitespace-pre-wrap">{f.value}</p><div className="text-xs text-[var(--muted)] mt-2">project={f.project_id || "-"} task={f.task_id || "-"} session={f.session_id || "-"}</div></div>)}</div>}
-
-          {(tab === "Context Chunks" || tab === "Search") && <div className="grid gap-2"><h2 className="font-semibold">Layer C · Context Chunks / Vector ({counts.chunks}, embedded {counts.embedded_chunks})</h2>{chunks.map(c => <div key={c.id} className="card py-3"><div className="flex items-center gap-2 mb-1"><span className="badge blue">{c.source_type}</span><span className={c.has_embedding ? "badge green" : "badge red"}>{c.has_embedding ? "embedded" : "no vector"}</span><span className="text-xs text-[var(--muted)] ml-auto">{new Date(c.created_at).toLocaleString()}</span></div><p className="text-sm text-zinc-300 whitespace-pre-wrap">{c.text}</p></div>)}</div>}
-
-          {(tab === "Working Memory" || tab === "Search") && <div className="grid gap-2"><h2 className="font-semibold">Layer D · Working Links / State ({counts.links})</h2>{links.map(l => <div key={l.id} className="card py-3"><div className="flex items-center gap-2"><span className="badge green">{l.relation}</span><span className="text-xs text-[var(--muted)]">{new Date(l.created_at).toLocaleString()}</span></div><div className="text-xs text-zinc-300 mt-2 font-mono break-all">{l.source_id} → {l.target_id}</div></div>)}{links.length === 0 && <div className="card text-[var(--muted)]">No links yet. Working memory graph empty.</div>}</div>}
-        </>
-      )}
+  const embedPct = counts.chunks ? Math.round((counts.embedded_chunks / counts.chunks) * 100) : 0;
+  return <div className="space-y-6">
+    <PageHeader eyebrow="four-layer memory" title="Memory Cockpit" accent="violet" description="Inspect raw events, active facts, vector context chunks, and working relations with coding-grade search UX." actions={<StatusPill tone="violet">{embedPct}% embedded</StatusPill>} />
+    {error && <DataCard className="border-rose-500/40 text-rose-300">{error}</DataCard>}
+    <div className="grid gap-4 md:grid-cols-5"><MetricTile label="Events" value={counts.events} tone="blue"/><MetricTile label="Facts" value={counts.facts} tone="green"/><MetricTile label="Chunks" value={counts.chunks} tone="violet"/><MetricTile label="Vectors" value={counts.embedded_chunks} tone="cyan"/><MetricTile label="Links" value={counts.links} tone="amber"/></div>
+    <div className="grid gap-4 xl:grid-cols-[1fr_.8fr]">
+      <DataCard><SectionTitle title="Memory pressure" subtitle="Embedding coverage and layer distribution"/><div className="grid gap-3 md:grid-cols-4">{layers.map((l,i)=><div key={l.id} className="rounded-2xl border border-white/10 bg-white/[0.035] p-4"><div className="flex items-center justify-between"><StatusPill tone="violet">L{i+1}</StatusPill><span className="metric-value text-2xl font-black text-violet-200">{l.count}</span></div><h3 className="mt-3 text-sm font-black text-slate-100">{l.name}</h3><p className="mt-2 text-xs leading-5 text-slate-400">{l.description}</p></div>)}</div><div className="mt-5 confidence-bar"><span style={{ width: `${embedPct}%` }} /></div><div className="mt-2 text-xs text-slate-400">Vector coverage {embedPct}% · {counts.embedded_chunks}/{counts.chunks} chunks</div></DataCard>
+      <DataCard><SectionTitle title="Runtime facets" subtitle="Scopes, actors, sessions"/><div className="space-y-4"><div className="flex flex-wrap gap-2">{scopes.map(s=><StatusPill key={s.scope} tone="blue">{s.scope}: {s.count}</StatusPill>)}</div><div className="flex flex-wrap gap-2">{eventTypes.map(e=><StatusPill key={e.event_type} tone="gray">{e.event_type}: {e.count}</StatusPill>)}</div><div className="flex flex-wrap gap-2">{actors.map(a=><StatusPill key={a.actor} tone="green">{a.actor}: {a.count}</StatusPill>)}</div><div className="space-y-1 text-xs text-slate-500">{sessions.slice(0,5).map(s=><div key={s.session_id} className="truncate font-mono">{s.session_id}: {s.count}</div>)}</div></div></DataCard>
     </div>
-  );
+    <CommandBar><div className="flex flex-col gap-3 lg:flex-row lg:items-center"><div className="flex flex-wrap gap-1 rounded-2xl bg-black/20 p-1">{TABS.map(t=><button key={t} onClick={()=>setTab(t)} className={`tab ${tab===t?"active":""}`}>{t}</button>)}</div><div className="flex flex-1 gap-2 lg:ml-auto"><input type="text" placeholder="Search memory events, facts, chunks..." value={query} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleSearch()} /><button onClick={handleSearch} className="btn btn-primary">Search</button></div></div></CommandBar>
+    {loading ? <div className="skeleton h-40" /> : <div className="space-y-5">
+      {(tab==="Raw Events"||tab==="Search") && <Stream title={`Layer A · Raw Events (${events.length})`}>{events.map(e=><DataCard key={e.id} className="py-4"><div className="flex flex-wrap items-center gap-2"><StatusPill tone="blue">{e.event_type}</StatusPill><StatusPill tone="gray">{e.actor}</StatusPill>{e.agent_id&&<StatusPill tone="green">{e.agent_id}</StatusPill>}<span className="ml-auto text-xs text-slate-500">{new Date(e.created_at).toLocaleString()}</span></div><p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-300">{e.content}</p><div className="mt-3 font-mono text-xs text-slate-500">session={e.session_id} task={e.task_id||"-"} run={e.run_id||"-"}</div></DataCard>)}</Stream>}
+      {(tab==="Active Facts"||tab==="Search") && <Stream title={`Layer B · Active Facts (${facts.length})`}>{facts.map(f=><DataCard key={f.id} className="py-4"><div className="flex flex-wrap items-center gap-2"><StatusPill tone="green">{f.scope}</StatusPill><span className="font-mono text-sm text-blue-300">{f.key}</span><span className="ml-auto text-xs text-slate-500">conf {f.confidence}</span></div><p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-300">{f.value}</p><div className="mt-3 confidence-bar"><span style={{ width: `${Math.round((f.confidence||0)*100)}%` }} /></div></DataCard>)}</Stream>}
+      {(tab==="Context Chunks"||tab==="Search") && <Stream title={`Layer C · Context Chunks (${chunks.length})`}>{chunks.map(c=><DataCard key={c.id} className="py-4"><div className="flex items-center gap-2"><StatusPill tone="violet">{c.source_type}</StatusPill><StatusPill tone={c.has_embedding?"green":"red"}>{c.has_embedding?"embedded":"no vector"}</StatusPill><span className="ml-auto text-xs text-slate-500">{new Date(c.created_at).toLocaleString()}</span></div><p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-300">{c.text}</p></DataCard>)}</Stream>}
+      {(tab==="Working Memory"||tab==="Search") && <Stream title={`Layer D · Working Links (${links.length})`}>{links.map(l=><DataCard key={l.id} className="py-4"><StatusPill tone="amber">{l.relation}</StatusPill><div className="mt-3 break-all font-mono text-xs text-slate-400">{l.source_id} → {l.target_id}</div></DataCard>)}{links.length===0&&<EmptyState title="Working graph empty" description="No active relations stored yet."/>}</Stream>}
+    </div>}
+  </div>;
 }
+function Stream({ title, children }: { title: string; children: React.ReactNode }) { return <section><SectionTitle title={title}/><div className="grid gap-3">{children}</div></section>; }

@@ -1,40 +1,15 @@
 "use client";
 import { useState, useCallback } from "react";
-
+import { CommandBar, DataCard, EmptyState, PageHeader, SectionTitle, StatusPill } from "../components/ui";
 interface KBItem { id: string; type: string; title: string; content: string; symbols_json: string; files_json: string; tags_json: string; updated_at: string; }
 interface TypeCount { type: string; count: number; }
-
-function tone(type: string) { if (type === "bug") return "red"; if (type === "rule") return "blue"; if (type === "decision") return "green"; return "gray"; }
-function safeJsonArray(value: string | undefined) { try { const v = JSON.parse(value || "[]"); return Array.isArray(v) ? v : []; } catch { return []; } }
-
-export default function KnowledgeBasePage() {
-  const [query, setQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
-  const [items, setItems] = useState<KBItem[]>([]);
-  const [types, setTypes] = useState<TypeCount[]>([]);
-  const [count, setCount] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [searched, setSearched] = useState(false);
-
-  const doSearch = useCallback(() => {
-    setLoading(true); setSearched(true);
-    const params = new URLSearchParams();
-    if (query) params.set("query", query);
-    if (typeFilter) params.set("type", typeFilter);
-    params.set("limit", "50");
-    fetch(`/api/kb?${params}`)
-      .then(r => r.json())
-      .then(d => { setItems(d.items || []); setTypes(d.types || []); setCount(d.count || 0); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, [query, typeFilter]);
-
-  return (
-    <div className="space-y-6">
-      <div><h1 className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">Knowledge Base</h1><p className="text-sm text-[var(--muted)] mt-2">Reusable bug/fix/rule/technical notes. No source graph here.</p></div>
-      <div className="card"><h2 className="text-sm font-semibold mb-3 text-zinc-300">KB Search</h2><div className="grid md:grid-cols-[1fr_160px_auto] gap-2"><input type="text" placeholder="Search bugs, fixes, rules, decisions, notes..." value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === "Enter" && doSearch()} /><select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}><option value="">All types</option><option value="bug">bug</option><option value="rule">rule</option><option value="decision">decision</option><option value="note">note</option></select><button onClick={doSearch} className="btn btn-primary">Search</button></div>{!searched && <p className="text-xs text-[var(--muted)] mt-3">Click Search to browse all knowledge items.</p>}</div>
-      <div className="card"><div className="flex items-center justify-between mb-4"><h2 className="font-semibold">Distribution</h2><span className="text-sm text-[var(--muted)]">Total: {count}</span></div><div className="flex gap-2 flex-wrap">{types.map(t => <button key={t.type} onClick={() => setTypeFilter(t.type)} className={`badge ${tone(t.type)}`}>{t.type}: {t.count}</button>)}</div></div>
-      {loading && <div className="text-[var(--muted)] animate-pulse">Searching...</div>}
-      {searched && !loading && <div className="grid gap-3">{items.map(item => <div key={item.id} className="card"><div className="flex items-center gap-2 mb-2"><span className={`badge ${tone(item.type)}`}>{item.type}</span><h3 className="font-semibold text-sm">{item.title}</h3><span className="text-xs text-[var(--muted)] ml-auto">{new Date(item.updated_at).toLocaleDateString()}</span></div><p className="text-sm text-zinc-300 whitespace-pre-wrap">{item.content}</p><div className="flex gap-1 mt-3 flex-wrap">{safeJsonArray(item.symbols_json).map((s: string) => <span key={s} className="badge blue text-xs">{s}</span>)}{safeJsonArray(item.tags_json).map((t: string) => <span key={t} className="badge gray text-xs">#{t}</span>)}{safeJsonArray(item.files_json).map((f: string) => <span key={f} className="badge green text-xs">{f}</span>)}</div></div>)}{items.length === 0 && <p className="text-[var(--muted)]">No KB results.</p>}</div>}
-    </div>
-  );
-}
+function tone(type: string): "red"|"blue"|"green"|"gray"|"amber" { if(type==="bug") return "red"; if(type==="rule") return "blue"; if(type==="decision") return "green"; if(type==="note") return "amber"; return "gray"; }
+function safeJsonArray(value: string | undefined) { try { const v=JSON.parse(value||"[]"); return Array.isArray(v)?v:[]; } catch { return []; } }
+export default function KnowledgeBasePage(){ const [query,setQuery]=useState(""); const [typeFilter,setTypeFilter]=useState(""); const [items,setItems]=useState<KBItem[]>([]); const [types,setTypes]=useState<TypeCount[]>([]); const [count,setCount]=useState(0); const [loading,setLoading]=useState(false); const [searched,setSearched]=useState(false); const [selected,setSelected]=useState<KBItem|null>(null);
+ const doSearch=useCallback(()=>{setLoading(true); setSearched(true); const params=new URLSearchParams(); if(query) params.set("query",query); if(typeFilter) params.set("type",typeFilter); params.set("limit","50"); fetch(`/api/kb?${params}`).then(r=>r.json()).then(d=>{ const next=d.items||[]; setItems(next); setTypes(d.types||[]); setCount(d.count||0); setSelected(next[0]||null); setLoading(false); }).catch(()=>setLoading(false));},[query,typeFilter]);
+ return <div className="space-y-6"><PageHeader eyebrow="knowledge substrate" title="Knowledge Base Console" accent="amber" description="Search reusable bug fixes, rules, decisions, and technical notes without mixing them into source graph data." actions={<StatusPill tone="amber">{count} items</StatusPill>}/>
+ <CommandBar><div className="grid gap-3 md:grid-cols-[1fr_190px_auto]"><input placeholder="Search bugs, fixes, rules, decisions, notes..." value={query} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doSearch()}/><select value={typeFilter} onChange={e=>setTypeFilter(e.target.value)}><option value="">All types</option><option value="bug">bug</option><option value="rule">rule</option><option value="decision">decision</option><option value="note">note</option></select><button onClick={doSearch} className="btn btn-primary">Search KB</button></div>{!searched&&<p className="mt-3 text-xs text-slate-500">Click Search to browse the indexed knowledge base.</p>}</CommandBar>
+ <div className="grid gap-4 xl:grid-cols-[300px_1fr_.9fr]"><DataCard><SectionTitle title="Type distribution"/><div className="space-y-2">{types.map(t=><button key={t.type} onClick={()=>setTypeFilter(t.type)} className={`flex w-full items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3 text-left transition hover:border-amber-400/30`}><StatusPill tone={tone(t.type)}>{t.type}</StatusPill><span className="metric-value font-black text-slate-200">{t.count}</span></button>)}{types.length===0&&<p className="text-sm text-slate-500">Search to load distribution.</p>}</div></DataCard>
+ <DataCard><SectionTitle title="Knowledge cards" subtitle={loading?"Searching...":`${items.length} visible`}/>{loading&&<div className="skeleton h-32"/>}<div className="space-y-3 max-h-[720px] overflow-auto pr-1">{items.map(item=><button key={item.id} onClick={()=>setSelected(item)} className={`block w-full rounded-2xl border p-4 text-left transition ${selected?.id===item.id?"border-amber-400/40 bg-amber-400/[0.08]":"border-white/10 bg-white/[0.03] hover:border-amber-400/25"}`}><div className="flex items-center gap-2"><StatusPill tone={tone(item.type)}>{item.type}</StatusPill><span className="ml-auto text-xs text-slate-500">{new Date(item.updated_at).toLocaleDateString()}</span></div><h3 className="mt-3 font-bold text-slate-100">{item.title}</h3><p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-400">{item.content}</p><div className="mt-3 flex flex-wrap gap-1">{safeJsonArray(item.tags_json).slice(0,4).map((t:string)=><StatusPill key={t} tone="gray">#{t}</StatusPill>)}</div></button>)}{searched&&!loading&&items.length===0&&<EmptyState title="No KB results" description="Try a broader query or clear filters."/>}</div></DataCard>
+ <DataCard glow><SectionTitle title="Preview" subtitle="Selected item"/>{selected?<div><div className="flex items-center gap-2"><StatusPill tone={tone(selected.type)}>{selected.type}</StatusPill><span className="text-xs text-slate-500">updated {new Date(selected.updated_at).toLocaleString()}</span></div><h2 className="mt-4 text-2xl font-black text-slate-100">{selected.title}</h2><p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-300">{selected.content}</p><div className="mt-5 space-y-3"><ChipRow title="Symbols" values={safeJsonArray(selected.symbols_json)} tone="blue"/><ChipRow title="Files" values={safeJsonArray(selected.files_json)} tone="green"/><ChipRow title="Tags" values={safeJsonArray(selected.tags_json).map((t:string)=>`#${t}`)} tone="gray"/></div></div>:<EmptyState title="No item selected" description="Search and select a knowledge item to preview."/>}</DataCard></div></div>; }
+function ChipRow({title,values,tone}:{title:string;values:string[];tone:"blue"|"green"|"gray"}){ if(!values.length) return null; return <div><div className="kicker mb-2">{title}</div><div className="flex flex-wrap gap-2">{values.map(v=><StatusPill key={v} tone={tone}>{v}</StatusPill>)}</div></div>; }

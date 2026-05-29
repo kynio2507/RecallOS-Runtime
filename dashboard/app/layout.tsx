@@ -7,17 +7,33 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "RecallOS Dashboard",
-  description: "Multi-module AI runtime dashboard — 6 modules, 41 tools",
+  title: "RecallOS Runtime Command Center",
+  description: "Dark-mode AI infrastructure dashboard for RecallOS memory, CodeGraph, project brain, knowledge base, and context packs.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full dark`}>
-      <body className="min-h-full flex">
+      <body className="min-h-full">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto p-6 ml-[240px]">
-          {children}
+        <main className="relative z-10 min-h-screen px-4 py-5 md:px-7 lg:ml-[264px]">
+          <div className="mx-auto max-w-[1800px] space-y-6">
+            <header className="glass-panel flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+              <div className="flex items-center gap-3">
+                <span className="status-dot green" />
+                <div>
+                  <div className="text-sm font-bold text-slate-100">Runtime online</div>
+                  <div className="kicker">localhost:3303 · PostgreSQL · SQLite · CodeGraph</div>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <span className="badge green">6 modules</span>
+                <span className="badge blue">41 tools</span>
+                <span className="badge violet">dark ops UI</span>
+              </div>
+            </header>
+            {children}
+          </div>
         </main>
       </body>
     </html>

@@ -1,140 +1,21 @@
 "use client";
 import { useEffect, useState } from "react";
-
+import { DataCard, EmptyState, MetricTile, PageHeader, SectionTitle, StatusPill } from "../components/ui";
 interface Decision { id: string; title: string; decision: string; reason: string; status: string; created_at: string; }
 interface RoadmapItem { id: string; title: string; description: string; priority: string; status: string; milestone: string; }
 interface Module { name: string; purpose: string; status: string; owner: string; }
 interface Doc { id: string; doc_type: string; title: string; snippet: string; version: number; status: string; updated_at: string; }
 interface GlossaryItem { term: string; definition: string; aliases: string[]; }
-
-const TABS = ["Overview", "Roadmap", "Decisions", "Modules", "Docs", "Glossary"];
-const priorityColor: Record<string, string> = { critical: "red", high: "yellow", medium: "blue", low: "gray" };
-const statusColor: Record<string, string> = { doing: "green", planned: "blue", blocked: "red", done: "gray" };
-
-export default function ProjectBrainPage() {
-  const [tab, setTab] = useState("Overview");
-  const [data, setData] = useState<{ overview: { title: string; content: string } | null; modules: Module[]; decisions: Decision[]; roadmap: RoadmapItem[]; glossary: GlossaryItem[]; docs: Doc[] } | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/project-brain")
-      .then(r => r.json())
-      .then(d => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, []);
-
-  if (loading) return <div className="flex items-center justify-center h-[60vh]"><div className="text-[var(--muted)] animate-pulse">Loading...</div></div>;
-  if (!data) return <div className="card"><p className="text-[var(--muted)]">No data</p></div>;
-
-  return (
-    <div>
-      <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent mb-6">Project Brain</h1>
-      <div className="flex gap-1 mb-6 p-1 bg-[var(--surface)] rounded-lg w-fit">
-        {TABS.map(t => <button key={t} onClick={() => setTab(t)} className={`tab ${tab === t ? "active" : ""}`}>{t}</button>)}
-      </div>
-
-      {tab === "Overview" && (
-        <div className="card">
-          {data.overview ? (
-            <div className="markdown-view">
-              <h2>{data.overview.title}</h2>
-              <p style={{ whiteSpace: "pre-wrap" }}>{data.overview.content}</p>
-            </div>
-          ) : <p className="text-[var(--muted)]">No overview doc. Use recall_project_upsert_doc to create one.</p>}
-        </div>
-      )}
-
-      {tab === "Roadmap" && (
-        <div className="grid gap-3">
-          {["doing", "planned", "blocked", "done"].map(status => {
-            const items = data.roadmap.filter(r => r.status === status);
-            if (items.length === 0) return null;
-            return (
-              <div key={status}>
-                <h3 className="text-sm font-semibold text-[var(--muted)] mb-2 uppercase">{status} ({items.length})</h3>
-                <div className="grid gap-2">
-                  {items.map(r => (
-                    <div key={r.id} className="card flex items-center justify-between">
-                      <div>
-                        <span className="font-medium">{r.title}</span>
-                        {r.description && <p className="text-xs text-[var(--muted)] mt-1">{r.description}</p>}
-                        {r.milestone && <span className="text-xs text-[var(--muted)]"> · {r.milestone}</span>}
-                      </div>
-                      <div className="flex gap-2">
-                        <span className={`badge ${priorityColor[r.priority] || "gray"}`}>{r.priority}</span>
-                        <span className={`badge ${statusColor[r.status] || "gray"}`}>{r.status}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-          {data.roadmap.length === 0 && <p className="text-[var(--muted)]">No roadmap items.</p>}
-        </div>
-      )}
-
-      {tab === "Decisions" && (
-        <div className="grid gap-3">
-          {data.decisions.map(d => (
-            <div key={d.id} className="card">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold">{d.title}</h3>
-                <span className={`badge ${d.status === "accepted" ? "green" : "gray"}`}>{d.status}</span>
-              </div>
-              <p className="text-sm text-zinc-300">{d.decision}</p>
-              {d.reason && <p className="text-xs text-[var(--muted)] mt-2">Reason: {d.reason}</p>}
-              <p className="text-xs text-[var(--muted)] mt-1">{new Date(d.created_at).toLocaleDateString()}</p>
-            </div>
-          ))}
-          {data.decisions.length === 0 && <p className="text-[var(--muted)]">No decisions.</p>}
-        </div>
-      )}
-
-      {tab === "Modules" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {data.modules.map(m => (
-            <div key={m.name} className="card">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold">{m.name}</h3>
-                <span className={`badge ${m.status === "active" ? "green" : "gray"}`}>{m.status}</span>
-              </div>
-              <p className="text-sm text-zinc-300">{m.purpose}</p>
-              {m.owner && <p className="text-xs text-[var(--muted)] mt-1">Owner: {m.owner}</p>}
-            </div>
-          ))}
-          {data.modules.length === 0 && <p className="text-[var(--muted)]">No modules.</p>}
-        </div>
-      )}
-
-      {tab === "Docs" && (
-        <div className="grid gap-3">
-          {data.docs.map(d => (
-            <div key={d.id} className="card">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="badge blue">{d.doc_type}</span>
-                <h3 className="font-semibold">{d.title}</h3>
-                <span className="text-xs text-[var(--muted)]">v{d.version}</span>
-              </div>
-              <p className="text-sm text-zinc-400">{d.snippet}...</p>
-              <p className="text-xs text-[var(--muted)] mt-1">{new Date(d.updated_at).toLocaleDateString()}</p>
-            </div>
-          ))}
-          {data.docs.length === 0 && <p className="text-[var(--muted)]">No docs.</p>}
-        </div>
-      )}
-
-      {tab === "Glossary" && (
-        <div className="grid gap-2">
-          {data.glossary.map(g => (
-            <div key={g.term} className="card flex items-start gap-4">
-              <span className="font-mono text-indigo-400 font-semibold min-w-[120px]">{g.term}</span>
-              <span className="text-sm text-zinc-300">{g.definition}</span>
-            </div>
-          ))}
-          {data.glossary.length === 0 && <p className="text-[var(--muted)]">No glossary terms.</p>}
-        </div>
-      )}
-    </div>
-  );
-}
+const TABS=["Overview","Roadmap","Decisions","Modules","Docs","Glossary"];
+const priorityColor:Record<string,"red"|"yellow"|"blue"|"gray">={critical:"red",high:"yellow",medium:"blue",low:"gray"}; const statusColor:Record<string,"green"|"blue"|"red"|"gray">={doing:"green",planned:"blue",blocked:"red",done:"gray"};
+export default function ProjectBrainPage(){ const [tab,setTab]=useState("Overview"); const [data,setData]=useState<{overview:{title:string;content:string}|null; modules:Module[]; decisions:Decision[]; roadmap:RoadmapItem[]; glossary:GlossaryItem[]; docs:Doc[]}|null>(null); const [loading,setLoading]=useState(true); useEffect(()=>{fetch("/api/project-brain").then(r=>r.json()).then(d=>{setData(d); setLoading(false);}).catch(()=>setLoading(false));},[]); if(loading) return <div className="skeleton h-56"/>; if(!data) return <EmptyState title="No Project Brain data" description="Seed project docs to activate this panel."/>;
+ return <div className="space-y-6"><PageHeader eyebrow="persistent project truth" title="Project Brain" accent="green" description="Operational knowledge about architecture, roadmap, decisions, modules, glossary, and project docs." actions={<StatusPill tone="green">{data.modules.length} modules</StatusPill>}/>
+ <div className="grid gap-4 md:grid-cols-5"><MetricTile label="Docs" value={data.docs.length} tone="blue"/><MetricTile label="Modules" value={data.modules.length} tone="green"/><MetricTile label="Decisions" value={data.decisions.length} tone="amber"/><MetricTile label="Roadmap" value={data.roadmap.length} tone="violet"/><MetricTile label="Glossary" value={data.glossary.length} tone="cyan"/></div>
+ <div className="glass-panel flex flex-wrap gap-1 p-2">{TABS.map(t=><button key={t} onClick={()=>setTab(t)} className={`tab ${tab===t?"active":""}`}>{t}</button>)}</div>
+ {tab==="Overview"&&<DataCard glow><SectionTitle title={data.overview?.title||"Overview"} subtitle="Project operating context"/>{data.overview?<div className="markdown-view"><p style={{whiteSpace:"pre-wrap"}}>{data.overview.content}</p></div>:<EmptyState title="No overview doc" description="Use recall_project_upsert_doc to create one."/>}</DataCard>}
+ {tab==="Roadmap"&&<div className="grid gap-4 xl:grid-cols-4">{["doing","planned","blocked","done"].map(status=>{const items=data.roadmap.filter(r=>r.status===status); return <DataCard key={status}><SectionTitle title={`${status} (${items.length})`}/><div className="space-y-3">{items.map(r=><div key={r.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"><div className="flex gap-2"><StatusPill tone={priorityColor[r.priority]||"gray"}>{r.priority}</StatusPill><StatusPill tone={statusColor[r.status]||"gray"}>{r.status}</StatusPill></div><h3 className="mt-3 font-bold text-slate-100">{r.title}</h3>{r.description&&<p className="mt-2 text-sm text-slate-400">{r.description}</p>}{r.milestone&&<p className="mt-2 font-mono text-xs text-slate-500">{r.milestone}</p>}</div>)}</div></DataCard>})}</div>}
+ {tab==="Decisions"&&<div className="grid gap-3">{data.decisions.map(d=><DataCard key={d.id}><div className="flex items-center gap-2"><StatusPill tone={d.status==="accepted"?"green":"gray"}>{d.status}</StatusPill><span className="ml-auto text-xs text-slate-500">{new Date(d.created_at).toLocaleDateString()}</span></div><h3 className="mt-3 text-xl font-black text-slate-100">{d.title}</h3><p className="mt-3 text-sm leading-6 text-slate-300">{d.decision}</p>{d.reason&&<p className="mt-3 text-xs text-slate-500">Reason: {d.reason}</p>}</DataCard>)}{!data.decisions.length&&<EmptyState title="No decisions" description="Accepted architecture decisions will appear here."/>}</div>}
+ {tab==="Modules"&&<div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{data.modules.map(m=><DataCard key={m.name}><div className="flex items-center justify-between"><h3 className="font-black text-slate-100">{m.name}</h3><StatusPill tone={m.status==="active"?"green":"gray"}>{m.status}</StatusPill></div><p className="mt-3 text-sm leading-6 text-slate-400">{m.purpose}</p>{m.owner&&<p className="mt-3 font-mono text-xs text-slate-500">owner={m.owner}</p>}</DataCard>)}</div>}
+ {tab==="Docs"&&<div className="grid gap-3">{data.docs.map(d=><DataCard key={d.id}><div className="flex flex-wrap items-center gap-2"><StatusPill tone="blue">{d.doc_type}</StatusPill><StatusPill tone="gray">v{d.version}</StatusPill><span className="ml-auto text-xs text-slate-500">{new Date(d.updated_at).toLocaleDateString()}</span></div><h3 className="mt-3 font-black text-slate-100">{d.title}</h3><p className="mt-2 text-sm text-slate-400">{d.snippet}...</p></DataCard>)}</div>}
+ {tab==="Glossary"&&<div className="grid gap-3 md:grid-cols-2">{data.glossary.map(g=><DataCard key={g.term}><div className="font-mono text-lg font-black text-emerald-300">{g.term}</div><p className="mt-3 text-sm leading-6 text-slate-300">{g.definition}</p>{g.aliases?.length>0&&<div className="mt-3 flex flex-wrap gap-2">{g.aliases.map(a=><StatusPill key={a} tone="gray">{a}</StatusPill>)}</div>}</DataCard>)}</div>}
+ </div>; }
