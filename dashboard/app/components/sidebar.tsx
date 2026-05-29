@@ -9,7 +9,7 @@ const NAV = [
   { href: "/codegraph", label: "CodeGraph", icon: "⬡", group: "Intelligence", tone: "cyan" },
   { href: "/knowledge-base", label: "Knowledge Base", icon: "▣", group: "Knowledge", tone: "amber" },
   { href: "/context-pack", label: "Context Pack", icon: "◆", group: "Knowledge", tone: "blue" },
-  { href: "/forgebase9", label: "ForgeBase9", icon: "✦", group: "Agents", tone: "violet" },
+  { href: "/forgebase9", label: "Multi Agent", icon: "✦", group: "Agents", tone: "violet" },
 ];
 
 const toneClass: Record<string, string> = {
