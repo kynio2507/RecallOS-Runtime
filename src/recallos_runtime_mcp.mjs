@@ -8,6 +8,7 @@ import { registerMemoryTools } from './modules/memory/tools.mjs';
 import { registerProjectBrainTools } from './modules/project-brain/tools.mjs';
 import { registerContextOrchestratorTools } from './modules/context-orchestrator/tools.mjs';
 import { registerAgentTools } from './modules/agents/tools.mjs';
+import { registerSessionRecorderTools } from './modules/session-recorder/tools.mjs';
 
 const mcpServer = new McpServer(
   { name: SERVER_NAME, version: SERVER_VERSION },
@@ -20,6 +21,7 @@ registerMemoryTools(mcpServer);
 registerProjectBrainTools(mcpServer);
 registerContextOrchestratorTools(mcpServer);
 registerAgentTools(mcpServer);
+registerSessionRecorderTools(mcpServer);
 
 const transport = new StdioServerTransport();
 await mcpServer.connect(transport);

@@ -13,6 +13,7 @@ import { memorySearch, memoryGetProfile } from '../memory/index.mjs';
 import { searchKnowledge, formatKnowledge } from '../knowledge-base/index.mjs';
 import { getCodeGraphContext, searchCodeGraph } from '../codegraph/index.mjs';
 import { makePairKey, pairMemoryFormat } from '../agents/index.mjs';
+import { resumeContext } from '../session-recorder/index.mjs';
 
 const DEFAULT_PROJECT = 'default';
 
@@ -176,6 +177,12 @@ export async function contextPack(args) {
   const depth = args.depth || 'full';
   const keywords = extractKeywords(task, symbols);
   const sections = [`# Full Agent Context\n\n**Task:** ${task}\n**Project:** ${pid}\n**Depth:** ${depth}\n`];
+  if (args.include_session_memory !== false) {
+    try {
+      const resume = await resumeContext({ workspace_id: args.workspace_id, project_id: pid, session_id: args.session_id || args.conversation_id, limit: args.resume_limit || 16 });
+      if (resume) sections.push(`## Session Resume Memory\n\n${truncSection(resume, 3500)}\n`);
+    } catch {}
+  }
   await withPg(async (client) => {
     const brainContext = await fetchProjectBrainContext(client, pid, keywords, { includeOverview: depth !== 'minimal', includeArchitecture: depth !== 'minimal' });
     if (brainContext) sections.push(brainContext);
@@ -199,6 +206,12 @@ export async function contextForTask(args) {
   const symbols = Array.isArray(args.symbols) ? args.symbols : [];
   const keywords = extractKeywords(task, symbols);
   const sections = [`# Task Context\n\n**Task:** ${task}\n`];
+  if (args.include_session_memory !== false) {
+    try {
+      const resume = await resumeContext({ workspace_id: args.workspace_id, project_id: pid, session_id: args.session_id || args.conversation_id, limit: args.resume_limit || 12 });
+      if (resume) sections.push(`## Session Resume Memory\n\n${truncSection(resume, 2500)}\n`);
+    } catch {}
+  }
   const brainContext = await withPg(c => fetchProjectBrainContext(c, pid, keywords, { includeOverview: false, includeArchitecture: false }));
   if (brainContext) sections.push(brainContext);
   const memoryContext = await fetchMemoryContext(task, 'summary');
@@ -237,6 +250,12 @@ export async function contextForAgent(args) {
   const symbols = Array.isArray(args.symbols) ? args.symbols : [];
   const keywords = extractKeywords(task, symbols);
   const sections = [`# Agent Context Pack\n\n**Agent:** ${agentId}\n**Task:** ${task}\n`];
+  if (args.include_session_memory !== false) {
+    try {
+      const resume = await resumeContext({ workspace_id: args.workspace_id, project_id: pid, session_id: args.session_id || args.conversation_id, limit: args.resume_limit || 14 });
+      if (resume) sections.push(`## Session Resume Memory\n\n${truncSection(resume, 3200)}\n`);
+    } catch {}
+  }
 
   await withPg(async (client) => {
     const agent = await client.query('SELECT * FROM agents WHERE id = $1', [agentId]);

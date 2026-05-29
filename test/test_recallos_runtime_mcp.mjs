@@ -115,6 +115,19 @@ const expectedTools = [
   'recall_project_search',
   'recall_project_status',
   'recall_project_upsert_doc',
+  'recall_session_import_transcript',
+  'recall_session_record',
+  'recall_session_record_assistant_action',
+  'recall_session_record_build_result',
+  'recall_session_record_command_result',
+  'recall_session_record_decision',
+  'recall_session_record_error',
+  'recall_session_record_file_change',
+  'recall_session_record_git_event',
+  'recall_session_record_project_snapshot',
+  'recall_session_record_user_request',
+  'recall_session_resume_context',
+  'recall_session_summarize',
 ].sort();
 assert(JSON.stringify(toolNames) === JSON.stringify(expectedTools), `tools/list mismatch, got ${JSON.stringify(toolNames)}`);
 

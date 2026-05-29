@@ -74,19 +74,6 @@ export async function pairMemoryUpsert(args) {
        m.title || null, m.content, m.importance ?? 0.5, m.status || 'active']
     );
     const row = result.rows[0];
-    await mirrorWorkflowMemory(client, {
-      actor: 'recallos',
-      event_type: 'pair_memory_upserted',
-      content: `[${m.pair_key}/${m.type}] ${m.title || ''}\n${m.content}`,
-      metadata: { pair_memory_id: row.id, type: m.type, title: m.title || null },
-      workspace_id: m.workspace_id,
-      project_id: m.project_id,
-      agent_id: m.agent_a,
-      pair_key: m.pair_key,
-      fact_scope: 'agent_pair',
-      fact_key: `pair_memory:${m.pair_key}:${m.type}:${row.id}`,
-      confidence: Math.max(0.5, Math.min(1, m.importance ?? 0.75)),
-    });
     return `Pair memory upserted: ${row.id} (${m.pair_key}/${m.type})`;
   });
 }
