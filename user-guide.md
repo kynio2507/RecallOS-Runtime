@@ -247,3 +247,18 @@ Example fact:
   "confidence": 1
 }
 ```
+
+## Multi Agent Dashboard
+
+Open `/forgebase9` from the sidebar label **Multi Agent**.
+
+Use it to:
+
+- add provider endpoint
+- edit provider and re-enter API key
+- delete provider
+- add model IDs
+- assign model per agent role
+- test model directly through RecallOS
+
+If direct model test says raw key is missing, click **Edit** on the provider, paste API key, then **Update provider**.

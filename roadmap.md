@@ -92,3 +92,16 @@ Hệ thống dùng được hằng ngày trong Antigravity với MCP server ổn
 2. **CodeGraph MCP > CLI** — migrate dần sang MCP integration
 3. **Minimal core** — không nhét tính năng không liên quan Knowledge Base + CodeGraphligence
 4. **Local-first** — không thêm external service dependency không cần thiết
+
+## Recently Completed
+
+- Session Recorder writes chat/task activity into 4-layer memory for session reconstruction.
+- Dashboard Memory split into 4-layer memory, multi-agent memory, and search.
+- Context Pack Composer no longer hangs on Monaco loading.
+- Multi Agent provider/model registry added with edit/delete provider, model catalog, assignments, and direct model test.
+
+## Next Candidates
+
+- Use `agent_model_assignments` from ForgeBase9 custom MCP runtime to remove remaining hardcoded model maps.
+- Add encrypted provider key migration and key rotation UI.
+- Add provider/model latency and success metrics to overview counts.

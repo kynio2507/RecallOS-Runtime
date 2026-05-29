@@ -14,9 +14,10 @@ RecallOS Runtime is a multi-module MCP/server tool platform for Antigravity and 
 - **Project Brain** — Project truth: docs, modules, roadmap, decisions, glossary, conventions.
 - **Context Orchestrator** — Top-level context assembly across all modules, with agent/handoff/pair context.
 - **Agents** — Multi-agent identity, inter-agent messaging, and task handoff chains.
+- **Multi Agent / ForgeBase9 Registry** — Provider endpoints, API key storage, model catalog, agent assignments, and direct model test from RecallOS.
 
 > [!IMPORTANT]
-> RecallOS Runtime exposes strict module-specific MCP tools. 41 tools across 6 modules.
+> RecallOS Runtime exposes strict module-specific MCP tools. 70 tools across 8 modules, plus dashboard APIs for Multi Agent provider/model testing.
 
 ## Current Status
 
@@ -29,8 +30,8 @@ RecallOS Runtime is a multi-module MCP/server tool platform for Antigravity and 
 | SQLite | `better-sqlite3` + FTS5, migration engine |
 | PostgreSQL | `pgvector/pgvector:pg17` (Docker) |
 | CodeGraph | MCP client (replaces CLI/npx) |
-| Tool namespaces | `recall_kb_*`, `recall_codegraph_*`, `recall_memory_*`, `recall_project_*`, `recall_context_*`, `recall_agent_*` |
-| Total tools | **41** |
+| Tool namespaces | `recall_kb_*`, `recall_codegraph_*`, `recall_memory_*`, `recall_project_*`, `recall_context_*`, `recall_agent_*`, `recall_session_*`, `recall_forge_*` |
+| Total tools | **70** |
 
 ## Tools
 
@@ -114,6 +115,32 @@ assistant / architect / secretary / coder / designer / reviewer / tester / custo
 Assistant → Architect → Coder → Reviewer → Assistant
 ```
 
+### Session Recorder (13 tools)
+
+Session Recorder turns chat/task activity into RecallOS 4-layer memory so a future agent can reconstruct the session without transcript history.
+
+| Tool group | Purpose |
+|---|---|
+| `recall_session_record*` | Record user requests, assistant actions, file changes, commands, decisions, errors, build/git events |
+| `recall_session_import_transcript` | Import a transcript into raw events/facts/chunks |
+| `recall_session_resume_context` | Generate session resume markdown from memory |
+| `recall_session_summarize` | Summarize current session into active facts |
+
+### Multi Agent / ForgeBase9 Registry (11 tools + dashboard)
+
+RecallOS owns provider/model configuration so multi-agent modules can use model assignments without calling ForgeBase9 MCP directly.
+
+| Area | Capability |
+|---|---|
+| Providers | Add/edit/delete endpoint, store masked/local/env API key metadata |
+| Models | Manual model IDs and `/models` discovery when raw key is available |
+| Assignments | Map agent role → provider/model/purpose |
+| Direct Test | Dashboard calls provider `/chat/completions` from RecallOS registry, not ForgeBase9 MCP |
+
+MCP tools: `recall_forge_provider_*`, `recall_forge_model_*`, `recall_forge_assignment_*`, `recall_forge_config_pack`, `recall_forge_seed_current_config`.
+
+Dashboard page: `Multi Agent` (`/forgebase9`).
+
 ### Context Orchestrator (6 tools)
 
 | Tool | For | Sources |
@@ -153,6 +180,8 @@ Assistant → Architect → Coder → Reviewer → Assistant
 | **Memory** | events/facts/vectors | Session history, agent state |
 | **CodeGraph** | source code graph | Symbol search, impact |
 | **Agents** | identity/messages/handoffs | Multi-agent coordination |
+| **Session Recorder** | events/facts/chunks | Reconstruct session history |
+| **Multi Agent Registry** | providers/models/assignments | Configure model endpoints and test calls |
 
 ## Environment Variables
 
@@ -172,6 +201,8 @@ Assistant → Architect → Coder → Reviewer → Assistant
 | `RECALLOS_EMBEDDING_MODEL` | `gemini/gemini-embedding-2-preview` | Embedding model |
 | `RECALLOS_EMBEDDING_API_KEY` | (none) | Embedding API key |
 | `RECALLOS_EMBEDDING_DIM` | `3072` | Embedding dimension |
+| `RECALLOS_SECRET_KEY` | (none) | Optional AES-GCM key encryption secret for provider keys |
+| `FORGEBASE9_API_KEY` | (none) | Optional seed key for current 9router provider |
 
 ## Quick Start
 
@@ -206,7 +237,7 @@ recall context --help
 ### Test
 
 ```powershell
-npm test              # MCP wiring (41 tools)
+npm test              # MCP wiring (70 tools)
 npm run test:memory   # Memory DB integration
 npm run test:brain    # Project Brain DB integration
 ```
@@ -220,4 +251,32 @@ npm run test:brain    # Project Brain DB integration
 | [agent-policy.md](agent-policy.md) | Policy snippet |
 | [user-guide.md](user-guide.md) | User guide |
 | [operations.md](operations.md) | Operations |
+| [multi-agent-registry.md](multi-agent-registry.md) | Multi Agent provider/model registry |
 | [roadmap.md](roadmap.md) | Roadmap |
+
+## Dashboard
+
+Local dashboard runs on port `3303` from `dashboard/`.
+
+```powershell
+cd dashboard
+npm run dev
+```
+
+Key pages:
+
+| Page | Purpose |
+|---|---|
+| `/memory` | 4-layer memory, multi-agent memory, search |
+| `/context-pack` | Context Pack Composer with generated markdown preview |
+| `/forgebase9` | Multi Agent provider/model registry, assignments, direct model test |
+
+### Multi Agent direct test
+
+The direct test path does not call ForgeBase9 MCP. It uses:
+
+```text
+Dashboard -> /api/forgebase9/test -> RecallOS provider registry -> provider /chat/completions
+```
+
+If provider only has a masked key, edit provider and re-enter raw API key or set `api_key_env_var`.

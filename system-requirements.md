@@ -109,3 +109,10 @@ recall codegraph --help
 recall kb --help
 recall mcp
 ```
+
+## Multi Agent Registry Requirements
+
+- PostgreSQL database must be reachable by dashboard and runtime.
+- Provider endpoints must be OpenAI-compatible for `/models` and `/chat/completions`.
+- Direct test requires raw API key stored locally or an environment variable configured with `api_key_env_var`.
+- Raw API keys must not be returned from APIs or rendered in dashboard.

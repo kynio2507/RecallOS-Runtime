@@ -160,3 +160,11 @@ Lazy connect, 30s timeout, circuit breaker. `PROJECT_PATH` per call.
 | Agent identity table | Enable stateless agents via MCP API |
 | Pair key alphabetical | Bidirectional lookup with single key |
 | Context Orchestrator | Single entry point for all context |
+
+## Multi Agent Provider Registry
+
+RecallOS now stores provider/model truth for multi-agent execution. The registry is PostgreSQL-backed and dashboard-managed. It includes `llm_providers`, `llm_model_catalog`, `agent_model_assignments`, and `llm_provider_checks`.
+
+The dashboard page **Multi Agent** (`/forgebase9`) can add/edit/delete providers, manage model IDs, assign models to agent roles, and run direct `/chat/completions` tests through RecallOS. This direct test does not call ForgeBase9 MCP.
+
+Design rule: ForgeBase9 MCP can orchestrate workflows, but provider/model state lives in RecallOS so Antigravity agents can reconstruct and continue work without chat history or hardcoded model maps.

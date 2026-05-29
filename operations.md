@@ -313,3 +313,25 @@ Example fact:
   "confidence": 1
 }
 ```
+
+## Multi Agent Operations
+
+### Edit provider key
+
+1. Open dashboard `/forgebase9`.
+2. Click **Edit** on provider.
+3. Paste raw API key or set `api_key_env_var`.
+4. Click **Update provider**.
+5. Run **Direct model test**.
+
+### Delete provider
+
+Click **Delete** on provider. This removes provider, related model catalog entries, and agent assignments for that provider.
+
+### Verify direct model call
+
+```powershell
+npm run build
+```
+
+Then in dashboard use **Direct model test**. The request path is dashboard API -> RecallOS registry -> provider `/chat/completions`, not ForgeBase9 MCP.

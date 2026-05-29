@@ -235,3 +235,9 @@ Khi phát hiện vấn đề mới, thêm vào section trên theo format:
 | `1.0.0-local` | MCP SDK stdio transport; `better-sqlite3`; schema v2; 21 knowledge items; full webapp knowledge map; CodeGraph OK |
 | `0.2.0` | Thêm `recall_kb_decision`, `recall_kb_bug`; schema v1; CodeGraph hybrid query |
 | `0.1.0` | MVP: `recall_kb_query`, `recall_kb_remember`, `recall_kb_status`; SQLite DB |
+
+## 2026-05-29 Multi Agent Registry
+
+Added RecallOS-owned ForgeBase9 provider/model registry and dashboard page **Multi Agent**. Initial issue: dashboard did not show route because local sync missed new folders and API imported runtime modules outside Next root. Fixed by syncing dashboard folders and rewriting dashboard APIs to use `dashboard/lib/db`.
+
+Added direct model test. If provider only has masked key, test fails with `Provider has no raw API key available`; fixed UX by adding **Edit provider** flow for re-entering raw key or env var.
