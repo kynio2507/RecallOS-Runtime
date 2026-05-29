@@ -73,7 +73,7 @@ export async function GET() {
         { name: "CodeGraph", status: codegraph.ok ? "active" : "error", storage: "SQLite CodeGraph DB", count: codeTotal, tools: 5, detail: `${(codegraph.counts as { files: number }).files} files · ${(codegraph.counts as { nodes: number }).nodes} nodes · ${(codegraph.counts as { edges: number }).edges} edges` },
         { name: "Memory", status: "active", storage: "PostgreSQL + pgvector", count: memoryTotal, tools: 7, detail: "4 layers: raw, active, context/vector, working links" },
         { name: "Project Brain", status: brainTotal > 0 ? "active" : "empty", storage: "PostgreSQL", count: brainTotal, tools: 9, detail: `${pgData.docs} docs · ${pgData.modules} modules · ${pgData.decisions} decisions · ${pgData.roadmap} roadmap` },
-        { name: "Context Orchestrator", status: "active", storage: "runtime assembly", count: 0, tools: 6, detail: "Project Truth + Full Agent Context packs" },
+        { name: "Context Orchestrator", status: "active", storage: "runtime composer", count: 6, tools: 6, detail: "6 sources · builds packs on demand · no persistent storage" },
         { name: "Agents", status: "active", storage: "PostgreSQL", count: pgData.agents + pgData.messages + pgData.handoffs, tools: 9, detail: "identity/messages/handoffs" },
       ],
       counts: {
