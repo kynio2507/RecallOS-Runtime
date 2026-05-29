@@ -237,6 +237,29 @@ export async function ensureMemorySchema() {
     await client.query('CREATE INDEX IF NOT EXISTS idx_handoffs_status ON agent_handoffs(status)');
     await client.query('CREATE INDEX IF NOT EXISTS idx_handoffs_project ON agent_handoffs(project_id)');
 
+    // Pair Memory: collaboration protocols, constraints, preferences, issues, checklists, decisions
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS pair_memories (
+        id TEXT PRIMARY KEY,
+        workspace_id TEXT NOT NULL,
+        project_id TEXT NOT NULL,
+        agent_a TEXT NOT NULL,
+        agent_b TEXT NOT NULL,
+        pair_key TEXT NOT NULL,
+        type TEXT NOT NULL,
+        title TEXT,
+        content TEXT NOT NULL,
+        importance REAL DEFAULT 0.5,
+        status TEXT DEFAULT 'active',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await client.query('CREATE INDEX IF NOT EXISTS idx_pair_memories_scope ON pair_memories(workspace_id, project_id, pair_key)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_pair_memories_type ON pair_memories(pair_key, type, status)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_pair_memories_updated ON pair_memories(updated_at DESC)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_pair_memories_status ON pair_memories(status)');
+
     // --- Expand memory_events scope ---
     const eventCols = ['workspace_id TEXT', 'project_id TEXT', 'agent_id TEXT', 'task_id TEXT', 'run_id TEXT'];
     for (const col of eventCols) {

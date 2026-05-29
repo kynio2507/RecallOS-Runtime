@@ -10,6 +10,11 @@ export function registerContextOrchestratorTools(mcpServer) {
       project_id: z.string().optional(),
       symbols: z.array(z.string()).optional(),
       depth: z.enum(['full', 'summary', 'minimal']).optional(),
+      workspace_id: z.string().optional(),
+      agent_id: z.string().optional(),
+      from_agent_id: z.string().optional(),
+      pair_agents: z.array(z.union([z.string(), z.array(z.string())])).optional(),
+      include_pair_memory: z.boolean().optional(),
     },
     async (args) => ({ content: [{ type: 'text', text: await contextPack(args) }] })
   );
@@ -44,6 +49,10 @@ export function registerContextOrchestratorTools(mcpServer) {
       task: z.string(),
       project_id: z.string().optional(),
       symbols: z.array(z.string()).optional(),
+      workspace_id: z.string().optional(),
+      from_agent_id: z.string().optional(),
+      pair_agents: z.array(z.union([z.string(), z.array(z.string())])).optional(),
+      include_pair_memory: z.boolean().optional(),
     },
     async (args) => ({ content: [{ type: 'text', text: await contextForAgent(args) }] })
   );
@@ -55,6 +64,7 @@ export function registerContextOrchestratorTools(mcpServer) {
       handoff_id: z.string(),
       project_id: z.string().optional(),
       task: z.string().optional(),
+      workspace_id: z.string().optional(),
     },
     async (args) => ({ content: [{ type: 'text', text: await contextForHandoff(args) }] })
   );
@@ -67,6 +77,8 @@ export function registerContextOrchestratorTools(mcpServer) {
       agent_b: z.string(),
       task: z.string().optional(),
       project_id: z.string().optional(),
+      workspace_id: z.string().optional(),
+      limit: z.number().optional(),
     },
     async (args) => ({ content: [{ type: 'text', text: await contextForPair(args) }] })
   );

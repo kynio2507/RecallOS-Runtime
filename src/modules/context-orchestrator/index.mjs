@@ -12,7 +12,7 @@ import { withDb } from '../../runtime/db.mjs';
 import { memorySearch, memoryGetProfile } from '../memory/index.mjs';
 import { searchKnowledge, formatKnowledge } from '../knowledge-base/index.mjs';
 import { getCodeGraphContext, searchCodeGraph } from '../codegraph/index.mjs';
-import { makePairKey } from '../agents/index.mjs';
+import { makePairKey, pairMemoryFormat } from '../agents/index.mjs';
 
 const DEFAULT_PROJECT = 'default';
 
@@ -132,6 +132,43 @@ async function fetchCodeGraphContext(task, symbols = []) {
   return sections.join('\n');
 }
 
+async function fetchPairMemoryContext(client, opts = {}) {
+  const workspaceId = opts.workspace_id || 'default';
+  const projectId = opts.project_id || DEFAULT_PROJECT;
+  const pairs = [];
+  if (opts.agent_a && opts.agent_b) pairs.push([opts.agent_a, opts.agent_b]);
+  if (Array.isArray(opts.pair_agents)) {
+    for (const pair of opts.pair_agents) {
+      if (Array.isArray(pair) && pair.length === 2) pairs.push(pair);
+      else if (typeof pair === 'string' && pair.includes(':')) pairs.push(pair.split(':'));
+    }
+  }
+  const unique = [...new Map(pairs.map(([a, b]) => [makePairKey(a, b), [a, b]])).values()];
+  const sections = [];
+  for (const [agentA, agentB] of unique) {
+    const pairKey = makePairKey(agentA, agentB);
+    const params = [workspaceId, projectId, pairKey, opts.limit || 12];
+    const result = await client.query(
+      `SELECT * FROM pair_memories WHERE workspace_id = $1 AND project_id = $2 AND pair_key = $3 AND status = 'active' ORDER BY importance DESC, updated_at DESC LIMIT $4`,
+      params
+    );
+    if (result.rows.length > 0) sections.push(`## Pair Memory: ${agentA} ↔ ${agentB}\n\n${truncSection(pairMemoryFormat(result.rows), 2200)}\n`);
+  }
+  return sections.join('\n');
+}
+
+function inferDefaultPairsForAgent(agentId, fromAgentId) {
+  const pairs = [];
+  if (fromAgentId && agentId) pairs.push([fromAgentId, agentId]);
+  if (agentId === 'coder') {
+    pairs.push(['pm_architecture', 'coder']);
+    pairs.push(['coder', 'reviewer']);
+  }
+  if (agentId === 'reviewer') pairs.push(['coder', 'reviewer']);
+  if (agentId === 'pm_architecture') pairs.push(['assistant', 'pm_architecture']);
+  return pairs;
+}
+
 // --- recall_context_pack ---
 export async function contextPack(args) {
   const task = args.task, pid = args.project_id || DEFAULT_PROJECT;
@@ -139,8 +176,15 @@ export async function contextPack(args) {
   const depth = args.depth || 'full';
   const keywords = extractKeywords(task, symbols);
   const sections = [`# Full Agent Context\n\n**Task:** ${task}\n**Project:** ${pid}\n**Depth:** ${depth}\n`];
-  const brainContext = await withPg(c => fetchProjectBrainContext(c, pid, keywords, { includeOverview: depth !== 'minimal', includeArchitecture: depth !== 'minimal' }));
-  if (brainContext) sections.push(brainContext);
+  await withPg(async (client) => {
+    const brainContext = await fetchProjectBrainContext(client, pid, keywords, { includeOverview: depth !== 'minimal', includeArchitecture: depth !== 'minimal' });
+    if (brainContext) sections.push(brainContext);
+    if (args.include_pair_memory || args.agent_id || args.from_agent_id || args.pair_agents) {
+      const pairAgents = Array.isArray(args.pair_agents) ? args.pair_agents : inferDefaultPairsForAgent(args.agent_id, args.from_agent_id);
+      const pairContext = await fetchPairMemoryContext(client, { workspace_id: args.workspace_id, project_id: pid, pair_agents: pairAgents });
+      if (pairContext) sections.push(pairContext);
+    }
+  });
   const memoryContext = await fetchMemoryContext(task, depth);
   if (memoryContext) sections.push(memoryContext);
   const kbContext = fetchKBContext(task, symbols);
@@ -200,6 +244,11 @@ export async function contextForAgent(args) {
       const a = agent.rows[0];
       sections.push(`## Agent Identity\n\n- Name: ${a.name}\n- Role: ${a.role}\n- Model: ${a.model_id || '(none)'}\n- Capabilities: ${JSON.stringify(a.capabilities_json)}\n`);
     }
+    if (args.include_pair_memory !== false) {
+      const pairAgents = Array.isArray(args.pair_agents) ? args.pair_agents : inferDefaultPairsForAgent(agentId, args.from_agent_id);
+      const pairContext = await fetchPairMemoryContext(client, { workspace_id: args.workspace_id, project_id: pid, pair_agents: pairAgents });
+      if (pairContext) sections.push(pairContext);
+    }
     const messages = await client.query(
       `SELECT from_agent_id, to_agent_id, message_type, content, created_at FROM agent_messages WHERE (from_agent_id = $1 OR to_agent_id = $1) ORDER BY created_at DESC LIMIT 10`, [agentId]
     );
@@ -229,7 +278,10 @@ export async function contextForHandoff(args) {
     const handoff = await client.query('SELECT * FROM agent_handoffs WHERE id = $1', [handoffId]);
     if (handoff.rows.length === 0) { sections.push('_Handoff not found._'); return; }
     const h = handoff.rows[0];
-    sections.push(`## Handoff Details\n\n- **Task:** ${h.task_title}\n- **From:** ${h.from_agent_id}\n- **To:** ${h.to_agent_id}\n- **Status:** ${h.status}\n- **Payload:** ${JSON.stringify(h.task_payload_json)}\n`);
+    const payload = h.task_payload_json || {};
+    sections.push(`## Handoff Details\n\n- **Task:** ${h.task_title}\n- **From:** ${h.from_agent_id}\n- **To:** ${h.to_agent_id}\n- **Status:** ${h.status}\n- **Task Type:** ${payload.task_type || '(unspecified)'}\n- **Objective:** ${payload.objective || h.task_title}\n- **Required Context:** ${JSON.stringify(payload.required_context || [])}\n- **Constraints:** ${JSON.stringify(payload.constraints || [])}\n- **Expected Output:** ${JSON.stringify(payload.expected_output || {})}\n`);
+    const pairContext = await fetchPairMemoryContext(client, { workspace_id: payload.workspace_id || args.workspace_id, project_id: h.project_id || pid, agent_a: h.from_agent_id, agent_b: h.to_agent_id });
+    if (pairContext) sections.push(pairContext);
     const sender = await client.query('SELECT * FROM agents WHERE id = $1', [h.from_agent_id]);
     if (sender.rows[0]) sections.push(`## Sender: ${sender.rows[0].name} (${sender.rows[0].role})\n`);
     const messages = await client.query(
@@ -281,9 +333,10 @@ export async function contextForPair(args) {
       sections.push(`## Conversation History (${messages.rows.length})\n`);
       for (const m of messages.rows) sections.push(`**${m.from_agent_id}** [${m.message_type}]: ${m.content.slice(0, 200)}${m.content.length > 200 ? '...' : ''}\n`);
     }
+    const pairMemory = await fetchPairMemoryContext(client, { workspace_id: args.workspace_id, project_id: pid, agent_a: agentA, agent_b: agentB, limit: args.limit || 15 });
+    if (pairMemory) sections.push(pairMemory);
   });
 
-  try { const pairProfile = await memoryGetProfile({ scope: 'agent_pair', pair_key: pairKey }); if (pairProfile && !pairProfile.includes('No facts found')) sections.push(`## Pair Memory\n\n${truncSection(pairProfile, 1500)}\n`); } catch {}
   if (keywords.length > 0) {
     const brainCtx = await withPg(c => fetchProjectBrainContext(c, pid, keywords, { includeOverview: false, includeArchitecture: false }));
     if (brainCtx) sections.push(brainCtx);
