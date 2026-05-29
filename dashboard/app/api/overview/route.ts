@@ -75,6 +75,7 @@ export async function GET() {
         { name: "Project Brain", status: brainTotal > 0 ? "active" : "empty", storage: "PostgreSQL", count: brainTotal, tools: 9, detail: `${pgData.docs} docs · ${pgData.modules} modules · ${pgData.decisions} decisions · ${pgData.roadmap} roadmap` },
         { name: "Context Orchestrator", status: "active", storage: "runtime composer", count: 6, tools: 6, detail: "6 sources · builds packs on demand · no persistent storage" },
         { name: "Agents", status: "active", storage: "PostgreSQL", count: pgData.agents + pgData.messages + pgData.handoffs, tools: 9, detail: "identity/messages/handoffs" },
+        { name: "ForgeBase9", status: "active", storage: "PostgreSQL + provider endpoints", count: 0, tools: 11, detail: "providers/models/agent assignments" },
       ],
       counts: {
         ...pgData,

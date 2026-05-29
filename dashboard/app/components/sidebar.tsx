@@ -9,6 +9,7 @@ const NAV = [
   { href: "/codegraph", label: "CodeGraph", icon: "⬡", group: "Intelligence", tone: "cyan" },
   { href: "/knowledge-base", label: "Knowledge Base", icon: "▣", group: "Knowledge", tone: "amber" },
   { href: "/context-pack", label: "Context Pack", icon: "◆", group: "Knowledge", tone: "blue" },
+  { href: "/forgebase9", label: "ForgeBase9", icon: "✦", group: "Agents", tone: "violet" },
 ];
 
 const toneClass: Record<string, string> = {
@@ -60,8 +61,8 @@ export function Sidebar() {
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
           <div className="mb-2 flex items-center gap-2 text-xs text-slate-300"><span className="status-dot green" />Live index</div>
           <div className="grid grid-cols-2 gap-2 text-center">
-            <div className="rounded-xl bg-white/[0.04] p-2"><div className="metric-value text-lg font-black text-blue-200">6</div><div className="text-[10px] text-slate-500">modules</div></div>
-            <div className="rounded-xl bg-white/[0.04] p-2"><div className="metric-value text-lg font-black text-violet-200">41</div><div className="text-[10px] text-slate-500">tools</div></div>
+            <div className="rounded-xl bg-white/[0.04] p-2"><div className="metric-value text-lg font-black text-blue-200">7</div><div className="text-[10px] text-slate-500">modules</div></div>
+            <div className="rounded-xl bg-white/[0.04] p-2"><div className="metric-value text-lg font-black text-violet-200">68</div><div className="text-[10px] text-slate-500">tools</div></div>
           </div>
         </div>
       </div>

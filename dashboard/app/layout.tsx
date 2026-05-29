@@ -8,7 +8,7 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 
 export const metadata: Metadata = {
   title: "RecallOS Runtime Command Center",
-  description: "Dark-mode AI infrastructure dashboard for RecallOS memory, CodeGraph, project brain, knowledge base, and context packs.",
+  description: "Dark-mode AI infrastructure dashboard for RecallOS memory, CodeGraph, project brain, knowledge base, ForgeBase9, and context packs.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -27,8 +27,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                <span className="badge green">6 modules</span>
-                <span className="badge blue">41 tools</span>
+                <span className="badge green">7 modules</span>
+                <span className="badge blue">68 tools</span>
                 <span className="badge violet">dark ops UI</span>
               </div>
             </header>
