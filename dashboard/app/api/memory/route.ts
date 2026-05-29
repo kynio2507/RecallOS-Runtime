@@ -51,6 +51,10 @@ export async function GET(req: Request) {
       chunks: parseInt((await queryPg("SELECT COUNT(*) as c FROM memory_chunks"))[0]?.c || "0", 10),
       links: parseInt((await queryPg("SELECT COUNT(*) as c FROM memory_links"))[0]?.c || "0", 10),
       embedded_chunks: parseInt((await queryPg("SELECT COUNT(*) as c FROM memory_chunks WHERE embedding IS NOT NULL"))[0]?.c || "0", 10),
+      handoffs: parseInt((await queryPg("SELECT COUNT(*) as c FROM agent_handoffs"))[0]?.c || "0", 10),
+      agent_messages: parseInt((await queryPg("SELECT COUNT(*) as c FROM agent_messages"))[0]?.c || "0", 10),
+      pair_memories: parseInt((await queryPg("SELECT COUNT(*) as c FROM pair_memories"))[0]?.c || "0", 10),
+      workflow_runs: parseInt((await queryPg("SELECT COUNT(DISTINCT COALESCE(task_payload_json->>'run_id', 'no-run')) as c FROM agent_handoffs"))[0]?.c || "0", 10),
     };
 
     const layers = [
@@ -58,6 +62,8 @@ export async function GET(req: Request) {
       { id: "active", name: "Layer B · Active facts", count: counts.facts, description: "Current facts by scope/key with confidence and source events." },
       { id: "context", name: "Layer C · Context chunks/vector", count: counts.chunks, description: `${counts.embedded_chunks}/${counts.chunks} chunks have embeddings for semantic retrieval.` },
       { id: "working", name: "Layer D · Working links/state", count: counts.links, description: "Relations across memory items and short-lived working graph state." },
+      { id: "workflow", name: "Agent workflow memory", count: counts.handoffs + counts.agent_messages, description: `${counts.workflow_runs} runs · ${counts.handoffs} handoffs · ${counts.agent_messages} messages.` },
+      { id: "pair", name: "Pair Memory", count: counts.pair_memories, description: "Reusable agent-pair protocols, constraints, preferences, issues, and checklists." },
     ];
 
     return NextResponse.json({ events, facts, chunks, links, counts, layers, scopes, eventTypes, actors, sessions });

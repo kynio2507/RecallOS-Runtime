@@ -43,12 +43,11 @@ export async function searchEvents(client, query, { event_type, actor, agent_id,
 
 export async function createEventChunk(client, event_id, content) {
   const embedding = await getEmbedding(content);
-  if (!embedding) return null;
   const result = await client.query(
     `INSERT INTO memory_chunks (source_type, source_id, text, embedding)
      VALUES ('raw_event', $1, $2, $3)
      RETURNING id`,
-    [event_id, content, JSON.stringify(embedding)]
+    [event_id, content, embedding ? JSON.stringify(embedding) : null]
   );
   return result.rows[0];
 }

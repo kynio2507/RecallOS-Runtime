@@ -2,6 +2,8 @@
 
 import { createHash } from 'node:crypto';
 import { withPg } from '../../runtime/pg.mjs';
+import { writeEvent, createEventChunk } from '../memory/layers/raw.mjs';
+import { upsertFact } from '../memory/layers/active.mjs';
 
 const DEFAULT_WORKSPACE = 'default';
 const DEFAULT_PROJECT = 'default';
@@ -27,6 +29,15 @@ function normalizePairMemoryArgs(args = {}) {
   const workspace_id = args.workspace_id || DEFAULT_WORKSPACE;
   const project_id = args.project_id || DEFAULT_PROJECT;
   return { ...args, workspace_id, project_id, agent_a, agent_b, pair_key, type };
+}
+
+async function mirrorWorkflowMemory(client, { session_id, actor, event_type, content, metadata = {}, workspace_id, project_id, agent_id, pair_key, task_id, run_id, fact_scope = 'workflow', fact_key, confidence = 0.75, embed = true }) {
+  const event = await writeEvent(client, { session_id: session_id || run_id || task_id || 'agent-workflow', actor, event_type, content, metadata, workspace_id, project_id, agent_id, task_id, run_id });
+  if (embed !== false) await createEventChunk(client, event.id, content);
+  if (fact_key) {
+    await upsertFact(client, { scope: fact_scope, key: fact_key, value: content.slice(0, 2000), confidence, source_ids: [event.id], workspace_id, project_id, agent_id, pair_key, task_id, session_id: session_id || null, run_id });
+  }
+  return event;
 }
 
 export function pairMemoryFormat(rows = []) {
@@ -62,7 +73,21 @@ export async function pairMemoryUpsert(args) {
       [id, m.workspace_id, m.project_id, m.agent_a, m.agent_b, m.pair_key, m.type,
        m.title || null, m.content, m.importance ?? 0.5, m.status || 'active']
     );
-    return `Pair memory upserted: ${result.rows[0].id} (${m.pair_key}/${m.type})`;
+    const row = result.rows[0];
+    await mirrorWorkflowMemory(client, {
+      actor: 'recallos',
+      event_type: 'pair_memory_upserted',
+      content: `[${m.pair_key}/${m.type}] ${m.title || ''}\n${m.content}`,
+      metadata: { pair_memory_id: row.id, type: m.type, title: m.title || null },
+      workspace_id: m.workspace_id,
+      project_id: m.project_id,
+      agent_id: m.agent_a,
+      pair_key: m.pair_key,
+      fact_scope: 'agent_pair',
+      fact_key: `pair_memory:${m.pair_key}:${m.type}:${row.id}`,
+      confidence: Math.max(0.5, Math.min(1, m.importance ?? 0.75)),
+    });
+    return `Pair memory upserted: ${row.id} (${m.pair_key}/${m.type})`;
   });
 }
 
@@ -208,7 +233,24 @@ export async function agentSendMessage(args) {
        args.task_id || null, args.from_agent_id, args.to_agent_id,
        args.message_type || 'message', args.content, args.summary || null]
     );
-    return `Message sent: ${result.rows[0].id} (${args.from_agent_id} → ${args.to_agent_id})`;
+    const row = result.rows[0];
+    await mirrorWorkflowMemory(client, {
+      session_id: args.run_id || args.task_id,
+      actor: args.from_agent_id,
+      event_type: `agent_${args.message_type || 'message'}`,
+      content: `${args.from_agent_id} → ${args.to_agent_id}\n${args.content}`,
+      metadata: { message_id: row.id, to_agent_id: args.to_agent_id, summary: args.summary || null },
+      workspace_id: args.workspace_id || null,
+      project_id: args.project_id || 'default',
+      agent_id: args.from_agent_id,
+      pair_key: makePairKey(args.from_agent_id, args.to_agent_id),
+      task_id: args.task_id || null,
+      run_id: args.run_id || null,
+      fact_scope: 'agent_message',
+      fact_key: `message:${row.id}`,
+      confidence: 0.7,
+    });
+    return `Message sent: ${row.id} (${args.from_agent_id} → ${args.to_agent_id})`;
   });
 }
 
@@ -275,7 +317,24 @@ export async function agentHandoff(args) {
        RETURNING id, created_at`,
       [from, to, args.project_id || 'default', objective, JSON.stringify(payload)]
     );
-    return `Handoff created: ${result.rows[0].id} (${from} → ${to}: ${objective})`;
+    const row = result.rows[0];
+    await mirrorWorkflowMemory(client, {
+      session_id: payload.run_id || payload.task_id,
+      actor: from,
+      event_type: 'agent_handoff_created',
+      content: `${from} → ${to}\n${objective}\nconstraints=${JSON.stringify(payload.constraints || [])}\nrequired_context=${JSON.stringify(payload.required_context || [])}`,
+      metadata: { handoff_id: row.id, payload },
+      workspace_id: args.workspace_id || payload.workspace_id || null,
+      project_id: args.project_id || 'default',
+      agent_id: from,
+      pair_key: payload.pair_key,
+      task_id: payload.task_id || null,
+      run_id: payload.run_id || null,
+      fact_scope: 'workflow',
+      fact_key: `handoff:${row.id}`,
+      confidence: 0.8,
+    });
+    return `Handoff created: ${row.id} (${from} → ${to}: ${objective})`;
   });
 }
 
@@ -287,7 +346,18 @@ export async function agentHandoffUpdate(args) {
     if (args.result_summary) { sets.push(`result_summary = $${params.length + 1}`); params.push(args.result_summary); }
     const result = await client.query(`UPDATE agent_handoffs SET ${sets.join(', ')} WHERE id = $1 RETURNING id, status, updated_at`, params);
     if (result.rows.length === 0) return `Handoff not found: ${args.handoff_id}`;
-    return `Handoff updated: ${result.rows[0].id} (status: ${result.rows[0].status})`;
+    const row = result.rows[0];
+    await mirrorWorkflowMemory(client, {
+      actor: 'recallos',
+      event_type: 'agent_handoff_updated',
+      content: `handoff=${row.id} status=${row.status}${args.result_summary ? `\n${args.result_summary}` : ''}`,
+      metadata: { handoff_id: row.id, status: row.status },
+      project_id: 'default',
+      fact_scope: 'workflow',
+      fact_key: `handoff_status:${row.id}`,
+      confidence: 0.7,
+    });
+    return `Handoff updated: ${row.id} (status: ${row.status})`;
   });
 }
 
