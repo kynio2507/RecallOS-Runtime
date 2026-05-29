@@ -1,15 +1,10 @@
 import { NextResponse } from "next/server";
-import { providerList, providerUpsert, providerCheck } from "../../../../src/modules/forgebase9-config/index.mjs";
+import { queryPg } from "@/lib/db";
 
-export async function GET() {
-  try { return NextResponse.json({ providers: await providerList({}) }); }
-  catch (e: unknown) { return NextResponse.json({ error: (e as Error).message }, { status: 500 }); }
-}
-
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    if (body.action === "check") return NextResponse.json({ check: await providerCheck(body) });
-    return NextResponse.json({ provider: await providerUpsert(body) });
-  } catch (e: unknown) { return NextResponse.json({ error: (e as Error).message }, { status: 500 }); }
-}
+const SCHEMA = `CREATE TABLE IF NOT EXISTS llm_providers (id TEXT PRIMARY KEY, name TEXT NOT NULL, base_url TEXT NOT NULL, api_key_ciphertext TEXT, api_key_masked TEXT, api_key_env_var TEXT, status TEXT DEFAULT 'active', metadata_json JSONB DEFAULT '{}'::jsonb, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW());`;
+const id = (name:string,url:string)=>`prov_${Buffer.from(`${name}:${url}`).toString("base64url").slice(0,24)}`;
+const mask = (k:string)=>k.length<=10?`${k.slice(0,2)}...${k.slice(-2)}`:`${k.slice(0,4)}...${k.slice(-4)}`;
+const safe = (p:Record<string,unknown>)=>({...p, has_api_key:Boolean(p.api_key_ciphertext||p.api_key_env_var||p.api_key_masked), api_key_storage:p.api_key_env_var?"env":p.api_key_ciphertext?"local":p.api_key_masked?"masked":"none", api_key_ciphertext:undefined});
+async function ensure(){await queryPg(SCHEMA);}
+export async function GET() { try { await ensure(); const rows=await queryPg("SELECT * FROM llm_providers ORDER BY updated_at DESC"); return NextResponse.json({providers:rows.map(safe)}); } catch (e: unknown) { return NextResponse.json({ error: (e as Error).message }, { status: 500 }); } }
+export async function POST(req: Request) { try { await ensure(); const b=await req.json(); if(b.action==="check") return NextResponse.json({check:{provider_id:b.provider_id, ok:false, message:"Live check requires raw key; use runtime MCP or re-save provider with key."}}); const providerId=b.id||id(b.name,b.base_url); const masked=b.api_key?mask(b.api_key):b.api_key_masked||null; const cipher=b.api_key?`plain:${Buffer.from(b.api_key).toString("base64")}`:null; const rows=await queryPg(`INSERT INTO llm_providers (id,name,base_url,api_key_ciphertext,api_key_masked,api_key_env_var,status,metadata_json) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, base_url=EXCLUDED.base_url, api_key_ciphertext=COALESCE(EXCLUDED.api_key_ciphertext,llm_providers.api_key_ciphertext), api_key_masked=COALESCE(EXCLUDED.api_key_masked,llm_providers.api_key_masked), api_key_env_var=EXCLUDED.api_key_env_var, status=EXCLUDED.status, updated_at=NOW() RETURNING *`,[providerId,b.name,b.base_url,cipher,masked,b.api_key_env_var||null,b.status||"active",b.metadata||{}]); return NextResponse.json({provider:safe(rows[0])}); } catch (e: unknown) { return NextResponse.json({ error: (e as Error).message }, { status: 500 }); } }

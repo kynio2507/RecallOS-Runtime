@@ -1,17 +1,7 @@
 import { NextResponse } from "next/server";
-import { assignmentList, assignmentUpsert, assignmentResolve } from "../../../../src/modules/forgebase9-config/index.mjs";
-
-export async function GET(req: Request) {
-  try {
-    const sp = new URL(req.url).searchParams;
-    return NextResponse.json({ assignments: await assignmentList({ workspace_id: sp.get("workspace_id") || undefined, project_id: sp.get("project_id") || "recallos-runtime" }) });
-  } catch (e: unknown) { return NextResponse.json({ error: (e as Error).message }, { status: 500 }); }
-}
-
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    if (body.action === "resolve") return NextResponse.json({ assignment: await assignmentResolve(body) });
-    return NextResponse.json({ assignment: await assignmentUpsert(body) });
-  } catch (e: unknown) { return NextResponse.json({ error: (e as Error).message }, { status: 500 }); }
-}
+import { queryPg } from "@/lib/db";
+const SCHEMA = `CREATE TABLE IF NOT EXISTS agent_model_assignments (id TEXT PRIMARY KEY, workspace_id TEXT DEFAULT 'default', project_id TEXT DEFAULT 'default', agent_id TEXT NOT NULL, provider_id TEXT, model_id TEXT NOT NULL, purpose TEXT DEFAULT 'primary', status TEXT DEFAULT 'active', metadata_json JSONB DEFAULT '{}'::jsonb, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW(), UNIQUE(workspace_id, project_id, agent_id, purpose));`;
+const aid=(w:string,p:string,a:string,u:string)=>`assign_${Buffer.from(`${w}:${p}:${a}:${u}`).toString("base64url").slice(0,24)}`;
+async function ensure(){await queryPg(SCHEMA);}
+export async function GET(req: Request) { try { await ensure(); const sp=new URL(req.url).searchParams; const w=sp.get("workspace_id")||"default", p=sp.get("project_id")||"recallos-runtime"; const rows=await queryPg(`SELECT a.*, p.name AS provider_name, p.base_url, p.api_key_masked, p.api_key_env_var FROM agent_model_assignments a LEFT JOIN llm_providers p ON p.id=a.provider_id WHERE a.workspace_id=$1 AND a.project_id=$2 ORDER BY a.agent_id`,[w,p]); return NextResponse.json({assignments:rows.map((r:Record<string,unknown>)=>({...r,has_api_key:Boolean(r.api_key_masked||r.api_key_env_var)}))}); } catch (e: unknown) { return NextResponse.json({ error: (e as Error).message }, { status: 500 }); } }
+export async function POST(req: Request) { try { await ensure(); const b=await req.json(); const w=b.workspace_id||"default", p=b.project_id||"recallos-runtime", u=b.purpose||"primary"; if(b.action==="resolve"){const rows=await queryPg(`SELECT a.*, p.name AS provider_name, p.base_url, p.api_key_masked, p.api_key_env_var FROM agent_model_assignments a LEFT JOIN llm_providers p ON p.id=a.provider_id WHERE a.workspace_id=$1 AND a.project_id=$2 AND a.agent_id=$3 AND a.purpose=$4 LIMIT 1`,[w,p,b.agent_id,u]); return NextResponse.json({assignment:rows[0]||null});} const rows=await queryPg(`INSERT INTO agent_model_assignments (id,workspace_id,project_id,agent_id,provider_id,model_id,purpose,status,metadata_json) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT (workspace_id,project_id,agent_id,purpose) DO UPDATE SET provider_id=EXCLUDED.provider_id,model_id=EXCLUDED.model_id,status=EXCLUDED.status,updated_at=NOW() RETURNING *`,[aid(w,p,b.agent_id,u),w,p,b.agent_id,b.provider_id,b.model_id,u,b.status||"active",b.metadata||{}]); return NextResponse.json({assignment:rows[0]}); } catch (e: unknown) { return NextResponse.json({ error: (e as Error).message }, { status: 500 }); } }

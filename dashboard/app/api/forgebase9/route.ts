@@ -1,15 +1,5 @@
 import { NextResponse } from "next/server";
-import { forgebase9ConfigPack, seedCurrentForgebase9Config } from "../../../src/modules/forgebase9-config/index.mjs";
-
-export async function GET() {
-  try { return NextResponse.json(await forgebase9ConfigPack({ project_id: "recallos-runtime" })); }
-  catch (e: unknown) { return NextResponse.json({ error: (e as Error).message }, { status: 500 }); }
-}
-
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    if (body.action === "seed") return NextResponse.json(await seedCurrentForgebase9Config(body));
-    return NextResponse.json({ error: "unsupported action" }, { status: 400 });
-  } catch (e: unknown) { return NextResponse.json({ error: (e as Error).message }, { status: 500 }); }
-}
+import { queryPg } from "@/lib/db";
+async function seed(){const provider="prov_OTrouter";await queryPg(`INSERT INTO llm_providers (id,name,base_url,api_key_masked,status) VALUES ($1,'9router','https://9router.may365.cloud/v1','sk-6...b8f3','active') ON CONFLICT (id) DO UPDATE SET api_key_masked='sk-6...b8f3',updated_at=NOW()`,[provider]);const models=['cx/gpt-5.5','gemini/gemini-3-flash-preview','ag/claude-sonnet-4-6','cmc/deepseek/deepseek-v4-pro','ag/claude-opus-4-6-thinking'];for(const m of models){const prefix=m.includes('/')?m.split('/')[0]+'/':null;await queryPg(`INSERT INTO llm_model_catalog (id,provider_id,model_id,prefix,family,status,last_seen_at) VALUES ($1,$2,$3,$4,$5,'active',NOW()) ON CONFLICT (provider_id,model_id) DO UPDATE SET last_seen_at=NOW()`,[`model_${Buffer.from(`${provider}:${m}`).toString('base64url').slice(0,24)}`,provider,m,prefix,m.split('/').slice(1).join('/')]);}const map:{[k:string]:string}={pm_architecture:'cx/gpt-5.5',analyzer:'gemini/gemini-3-flash-preview',senior_product_designer:'ag/claude-sonnet-4-6',senior_product_coder:'cmc/deepseek/deepseek-v4-pro',product_code_reviewer:'ag/claude-opus-4-6-thinking'};for(const [a,m] of Object.entries(map)){await queryPg(`INSERT INTO agent_model_assignments (id,workspace_id,project_id,agent_id,provider_id,model_id,purpose,status) VALUES ($1,'default','recallos-runtime',$2,$3,$4,'primary','active') ON CONFLICT (workspace_id,project_id,agent_id,purpose) DO UPDATE SET provider_id=EXCLUDED.provider_id,model_id=EXCLUDED.model_id,updated_at=NOW()`,[`assign_${Buffer.from(`default:recallos-runtime:${a}:primary`).toString('base64url').slice(0,24)}`,a,provider,m]);}}
+export async function GET() { try { const [providers,models,assignments]=await Promise.all([queryPg('SELECT * FROM llm_providers ORDER BY updated_at DESC'),queryPg('SELECT m.*,p.name provider_name FROM llm_model_catalog m LEFT JOIN llm_providers p ON p.id=m.provider_id ORDER BY m.model_id'),queryPg(`SELECT a.*,p.name provider_name,p.base_url,p.api_key_masked FROM agent_model_assignments a LEFT JOIN llm_providers p ON p.id=a.provider_id ORDER BY a.agent_id`)]); return NextResponse.json({providers,models,assignments,agents:['pm_architecture','analyzer','senior_product_designer','senior_product_coder','product_code_reviewer']}); } catch (e: unknown) { return NextResponse.json({ error: (e as Error).message }, { status: 500 }); } }
+export async function POST(req: Request) { try { const body=await req.json(); if(body.action==='seed'){await seed(); return GET();} return NextResponse.json({ error: "unsupported action" }, { status: 400 }); } catch (e: unknown) { return NextResponse.json({ error: (e as Error).message }, { status: 500 }); } }

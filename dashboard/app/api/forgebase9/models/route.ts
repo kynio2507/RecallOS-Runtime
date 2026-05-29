@@ -1,17 +1,7 @@
 import { NextResponse } from "next/server";
-import { modelList, modelUpsert, modelDiscover } from "../../../../src/modules/forgebase9-config/index.mjs";
-
-export async function GET(req: Request) {
-  try {
-    const provider_id = new URL(req.url).searchParams.get("provider_id") || undefined;
-    return NextResponse.json({ models: await modelList({ provider_id }) });
-  } catch (e: unknown) { return NextResponse.json({ error: (e as Error).message }, { status: 500 }); }
-}
-
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    if (body.action === "discover") return NextResponse.json({ discovery: await modelDiscover(body) });
-    return NextResponse.json({ model: await modelUpsert(body) });
-  } catch (e: unknown) { return NextResponse.json({ error: (e as Error).message }, { status: 500 }); }
-}
+import { queryPg } from "@/lib/db";
+const SCHEMA = `CREATE TABLE IF NOT EXISTS llm_model_catalog (id TEXT PRIMARY KEY, provider_id TEXT, model_id TEXT NOT NULL, prefix TEXT, family TEXT, capabilities_json JSONB DEFAULT '{}'::jsonb, status TEXT DEFAULT 'active', last_seen_at TIMESTAMPTZ, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW(), UNIQUE(provider_id, model_id));`;
+const mid=(p:string,m:string)=>`model_${Buffer.from(`${p}:${m}`).toString("base64url").slice(0,24)}`; const prefix=(m:string)=>m.includes("/")?m.split("/")[0]+"/":null; const family=(m:string)=>m.includes("/")?m.split("/").slice(1).join("/"):m;
+async function ensure(){await queryPg(SCHEMA);}
+export async function GET(req: Request) { try { await ensure(); const provider_id=new URL(req.url).searchParams.get("provider_id"); const rows=await queryPg(`SELECT m.*, p.name AS provider_name FROM llm_model_catalog m LEFT JOIN llm_providers p ON p.id=m.provider_id WHERE ($1::text IS NULL OR m.provider_id=$1) ORDER BY m.provider_id,m.model_id`,[provider_id||null]); return NextResponse.json({models:rows}); } catch (e: unknown) { return NextResponse.json({ error: (e as Error).message }, { status: 500 }); } }
+export async function POST(req: Request) { try { await ensure(); const b=await req.json(); if(b.action==="discover") return NextResponse.json({error:"Discovery from dashboard requires raw API key re-save; manual model entry is available."},{status:400}); const rows=await queryPg(`INSERT INTO llm_model_catalog (id,provider_id,model_id,prefix,family,capabilities_json,status,last_seen_at) VALUES ($1,$2,$3,$4,$5,$6,$7,NOW()) ON CONFLICT (provider_id,model_id) DO UPDATE SET prefix=EXCLUDED.prefix,family=EXCLUDED.family,status=EXCLUDED.status,last_seen_at=NOW(),updated_at=NOW() RETURNING *`,[mid(b.provider_id,b.model_id),b.provider_id,b.model_id,b.prefix||prefix(b.model_id),b.family||family(b.model_id),b.capabilities||{},b.status||"active"]); return NextResponse.json({model:rows[0]}); } catch (e: unknown) { return NextResponse.json({ error: (e as Error).message }, { status: 500 }); } }
