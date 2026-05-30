@@ -1,53 +1,18 @@
 -- ForgeBase9 provider/model registry
-CREATE TABLE IF NOT EXISTS llm_providers (
+--
+-- This SQLite migration is intentionally a compatibility marker.
+-- The ForgeBase9/Multi Agent registry is PostgreSQL-backed and its schema is
+-- created by src/modules/forgebase9-config/index.mjs plus dashboard APIs.
+--
+-- Do not put PostgreSQL-only types here. SQLite migrations are applied by
+-- runtime/openDb() for Knowledge Base operations. PostgreSQL syntax such as
+-- JSONB, TIMESTAMPTZ, UUID, and ON DELETE CASCADE can break all KB tools.
+
+CREATE TABLE IF NOT EXISTS forgebase9_registry_sqlite_marker (
   id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  base_url TEXT NOT NULL,
-  api_key_ciphertext TEXT,
-  api_key_masked TEXT,
-  api_key_env_var TEXT,
-  status TEXT DEFAULT 'active',
-  metadata_json JSONB DEFAULT '{}'::jsonb,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  note TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS llm_model_catalog (
-  id TEXT PRIMARY KEY,
-  provider_id TEXT REFERENCES llm_providers(id) ON DELETE CASCADE,
-  model_id TEXT NOT NULL,
-  prefix TEXT,
-  family TEXT,
-  capabilities_json JSONB DEFAULT '{}'::jsonb,
-  status TEXT DEFAULT 'active',
-  last_seen_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(provider_id, model_id)
-);
-
-CREATE TABLE IF NOT EXISTS agent_model_assignments (
-  id TEXT PRIMARY KEY,
-  workspace_id TEXT DEFAULT 'default',
-  project_id TEXT DEFAULT 'default',
-  agent_id TEXT NOT NULL,
-  provider_id TEXT REFERENCES llm_providers(id) ON DELETE CASCADE,
-  model_id TEXT NOT NULL,
-  purpose TEXT DEFAULT 'primary',
-  status TEXT DEFAULT 'active',
-  metadata_json JSONB DEFAULT '{}'::jsonb,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(workspace_id, project_id, agent_id, purpose)
-);
-
-CREATE TABLE IF NOT EXISTS llm_provider_checks (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  provider_id TEXT REFERENCES llm_providers(id) ON DELETE CASCADE,
-  check_type TEXT,
-  ok BOOLEAN,
-  status_code INT,
-  message TEXT,
-  latency_ms INT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+INSERT OR IGNORE INTO forgebase9_registry_sqlite_marker (id, note)
+VALUES ('003', 'ForgeBase9 registry schema lives in PostgreSQL');
