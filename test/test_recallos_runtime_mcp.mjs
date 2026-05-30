@@ -139,6 +139,16 @@ const expectedTools = [
   'recall_session_record_user_request',
   'recall_session_resume_context',
   'recall_session_summarize',
+  'recall_memory_capture_analyze',
+  'recall_memory_capture_commit',
+  'recall_memory_capture_list',
+  'recall_memory_capture_policy',
+  'recall_workflow_run_finish',
+  'recall_workflow_run_get',
+  'recall_workflow_run_list',
+  'recall_workflow_run_start',
+  'recall_workflow_step_start',
+  'recall_workflow_step_update',
 ].sort();
 assert(JSON.stringify(toolNames) === JSON.stringify(expectedTools), `tools/list mismatch, got ${JSON.stringify(toolNames)}`);
 

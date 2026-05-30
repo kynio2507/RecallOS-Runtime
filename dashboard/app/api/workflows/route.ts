@@ -1,38 +1,14 @@
 import { NextResponse } from "next/server";
 import { queryPg } from "@/lib/db";
-
+async function ensure(){await queryPg(`CREATE TABLE IF NOT EXISTS workflow_runs (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), goal TEXT NOT NULL, status TEXT DEFAULT 'running', current_phase TEXT, workspace_id TEXT DEFAULT 'default', project_id TEXT DEFAULT 'default', metadata_json JSONB DEFAULT '{}'::jsonb, started_at TIMESTAMPTZ DEFAULT NOW(), finished_at TIMESTAMPTZ, result_summary TEXT, error TEXT)`);await queryPg(`CREATE TABLE IF NOT EXISTS workflow_steps (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), run_id UUID REFERENCES workflow_runs(id) ON DELETE CASCADE, agent_id TEXT, step_name TEXT NOT NULL, status TEXT DEFAULT 'running', model_id TEXT, provider_id TEXT, handoff_id TEXT, input_summary TEXT, output_summary TEXT, error TEXT, metadata_json JSONB DEFAULT '{}'::jsonb, started_at TIMESTAMPTZ DEFAULT NOW(), finished_at TIMESTAMPTZ)`)}
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const project_id = searchParams.get("project_id") || "recallos-runtime";
-  const run_id = searchParams.get("run_id") || "";
-  const limit = Math.min(parseInt(searchParams.get("limit") || "80", 10), 200);
-  try {
-    const handoffConds = ["project_id = $1"];
-    const handoffParams: unknown[] = [project_id];
-    if (run_id) { handoffConds.push("task_payload_json->>'run_id' = $2"); handoffParams.push(run_id); }
-    const handoffs = await queryPg(
-      `SELECT id, from_agent_id, to_agent_id, project_id, task_title, task_payload_json, status, result_summary, created_at, updated_at
-       FROM agent_handoffs WHERE ${handoffConds.join(" AND ")} ORDER BY created_at DESC LIMIT $${handoffParams.length + 1}`,
-      [...handoffParams, limit]
-    );
-
-    const messageConds = ["project_id = $1"];
-    const messageParams: unknown[] = [project_id];
-    if (run_id) { messageConds.push("run_id = $2"); messageParams.push(run_id); }
-    const messages = await queryPg(
-      `SELECT id, workspace_id, project_id, run_id, task_id, from_agent_id, to_agent_id, message_type, LEFT(content, 900) AS content, summary, created_at
-       FROM agent_messages WHERE ${messageConds.join(" AND ")} ORDER BY created_at DESC LIMIT $${messageParams.length + 1}`,
-      [...messageParams, limit]
-    );
-
-    const runs = await queryPg(
-      `SELECT COALESCE(task_payload_json->>'run_id', 'no-run') AS run_id, COUNT(*) AS handoffs, MAX(created_at) AS last_seen
-       FROM agent_handoffs WHERE project_id = $1 GROUP BY COALESCE(task_payload_json->>'run_id', 'no-run') ORDER BY last_seen DESC LIMIT 30`,
-      [project_id]
-    );
-
-    return NextResponse.json({ runs, handoffs, messages });
-  } catch (e: unknown) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
-  }
+  const { searchParams } = new URL(req.url); const project_id = searchParams.get("project_id") || "recallos-runtime"; const run_id = searchParams.get("run_id") || ""; const limit = Math.min(parseInt(searchParams.get("limit") || "80", 10), 200);
+  try { await ensure();
+    const handoffs = await queryPg(`SELECT id, from_agent_id, to_agent_id, project_id, task_title, task_payload_json, status, result_summary, created_at, updated_at FROM agent_handoffs WHERE project_id=$1 ORDER BY created_at DESC LIMIT $2`, [project_id, limit]);
+    const messages = await queryPg(`SELECT id, workspace_id, project_id, run_id, task_id, from_agent_id, to_agent_id, message_type, LEFT(content, 900) AS content, summary, created_at FROM agent_messages WHERE project_id=$1 ORDER BY created_at DESC LIMIT $2`, [project_id, limit]);
+    const runs = await queryPg(`SELECT r.*, COUNT(s.id)::int AS step_count FROM workflow_runs r LEFT JOIN workflow_steps s ON s.run_id=r.id WHERE r.project_id=$1 GROUP BY r.id ORDER BY r.started_at DESC LIMIT 50`, [project_id]);
+    const steps = run_id ? await queryPg(`SELECT * FROM workflow_steps WHERE run_id=$1 ORDER BY started_at`, [run_id]) : await queryPg(`SELECT * FROM workflow_steps ORDER BY started_at DESC LIMIT $1`, [limit]);
+    return NextResponse.json({ runs, steps, handoffs, messages });
+  } catch (e: unknown) { return NextResponse.json({ error: (e as Error).message }, { status: 500 }); }
 }
+export async function POST(req:Request){try{await ensure();const b=await req.json();if(b.action==='start_run'){const r=await queryPg(`INSERT INTO workflow_runs (goal,current_phase,project_id,workspace_id,metadata_json) VALUES ($1,$2,$3,$4,$5) RETURNING *`,[b.goal,b.current_phase||'intake',b.project_id||'recallos-runtime',b.workspace_id||'default',b.metadata||{}]);return NextResponse.json({run:r[0]});}if(b.action==='finish_run'){const r=await queryPg(`UPDATE workflow_runs SET status=$2,result_summary=$3,error=$4,finished_at=NOW() WHERE id=$1 RETURNING *`,[b.run_id,b.status||'completed',b.result_summary,b.error]);return NextResponse.json({run:r[0]});}return NextResponse.json({error:'unsupported action'},{status:400});}catch(e:unknown){return NextResponse.json({error:(e as Error).message},{status:500});}}

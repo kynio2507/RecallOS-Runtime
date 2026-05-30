@@ -10,6 +10,8 @@ import { registerContextOrchestratorTools } from './modules/context-orchestrator
 import { registerAgentTools } from './modules/agents/tools.mjs';
 import { registerSessionRecorderTools } from './modules/session-recorder/tools.mjs';
 import { registerForgeBase9ConfigTools } from './modules/forgebase9-config/tools.mjs';
+import { registerMemoryCaptureTools } from './modules/memory-capture/tools.mjs';
+import { registerWorkflowStateTools } from './modules/workflow-state/tools.mjs';
 
 const mcpServer = new McpServer(
   { name: SERVER_NAME, version: SERVER_VERSION },
@@ -24,6 +26,8 @@ registerContextOrchestratorTools(mcpServer);
 registerAgentTools(mcpServer);
 registerSessionRecorderTools(mcpServer);
 registerForgeBase9ConfigTools(mcpServer);
+registerMemoryCaptureTools(mcpServer);
+registerWorkflowStateTools(mcpServer);
 
 const transport = new StdioServerTransport();
 await mcpServer.connect(transport);

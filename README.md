@@ -67,6 +67,9 @@ RecallOS Runtime is a multi-module MCP/server tool platform for Antigravity and 
 | `recall_memory_summarize_session` | Summarize session → facts |
 | `recall_memory_link` | Link memory items |
 
+> [!IMPORTANT]
+> Current memory capture is semi-automatic. Agents must still call `recall_memory_write_event`, `recall_memory_upsert_fact`, or `recall_session_record_*` to persist events/facts/session data. RecallOS can then auto-create chunks/embeddings and inject resume context. Full response-capture middleware is planned, not complete yet.
+
 #### Memory Scopes
 
 ```text

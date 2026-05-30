@@ -4,11 +4,14 @@ import { usePathname } from "next/navigation";
 
 const NAV = [
   { href: "/", label: "Overview", icon: "◉", group: "Core", tone: "blue" },
-  { href: "/project-brain", label: "Project Brain", icon: "◈", group: "Core", tone: "green" },
-  { href: "/memory", label: "Memory", icon: "◇", group: "Intelligence", tone: "violet" },
+  { href: "/project-brain", label: "Project Brain", icon: "✦", group: "Core", tone: "violet" },
+  { href: "/memory", label: "Memory", icon: "◇", group: "Intelligence", tone: "green" },
+  { href: "/memory-capture", label: "Memory Capture", icon: "✧", group: "Intelligence", tone: "green" },
   { href: "/codegraph", label: "CodeGraph", icon: "⬡", group: "Intelligence", tone: "cyan" },
   { href: "/knowledge-base", label: "Knowledge Base", icon: "▣", group: "Knowledge", tone: "amber" },
   { href: "/context-pack", label: "Context Pack", icon: "◆", group: "Knowledge", tone: "blue" },
+  { href: "/retrieval-debugger", label: "Retrieval Debugger", icon: "⌁", group: "Knowledge", tone: "cyan" },
+  { href: "/workflows", label: "Workflows", icon: "↯", group: "Agents", tone: "blue" },
   { href: "/forgebase9", label: "Multi Agent", icon: "✦", group: "Agents", tone: "violet" },
 ];
 
