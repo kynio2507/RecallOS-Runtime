@@ -31,11 +31,11 @@ export default function OverviewPage() {
   const chunks = Number(data.counts.memory_chunks || 0);
   const density = data.counts.codegraph_nodes ? Math.round((Number(data.counts.codegraph_edges || 0) / Number(data.counts.codegraph_nodes || 1)) * 100) / 100 : 0;
 
-  return <div className="space-y-4">
+  return <div className="page-shell">
     <PageHeader title="Command Center" description="Runtime telemetry across memory, CodeGraph, Knowledge Base, and context assembly." actions={<><StatusPill tone="green">Postgres</StatusPill><StatusPill tone={data.codegraph.ok ? "cyan" : "red"}>CodeGraph {data.codegraph.ok ? "ok" : "err"}</StatusPill></>} />
 
     {/* Primary metrics row */}
-    <div className="grid gap-3 md:grid-cols-4">
+    <div className="dashboard-grid-4">
       <MetricTile label="Modules" value={data.modules.length} detail="Active runtime surfaces" tone="blue" />
       <MetricTile label="Vectors" value={`${embedded}/${chunks}`} detail="Embedded / total chunks" tone="violet" />
       <MetricTile label="Graph density" value={density} detail={`${data.counts.codegraph_edges || 0}e / ${data.counts.codegraph_nodes || 0}n`} tone="cyan" />
@@ -43,17 +43,17 @@ export default function OverviewPage() {
     </div>
 
     {/* Module table + Activity */}
-    <div className="grid gap-3 xl:grid-cols-[1.4fr_1fr]">
+    <div className="dashboard-grid-main">
       <DataCard title="System modules" subtitle="Runtime subsystem status" accent="blue">
-        <div className="divide-y divide-white/[0.04]">
+        <div className="divide-y divide-white/[0.05]">
           {data.modules.map((m, i) => (
-            <div key={m.name} className={`flex items-center gap-3 py-2 animate-fade-up ${i > 0 ? '' : ''}`} style={{ animationDelay: `${i * 40}ms` }}>
-              <div className="flex w-5 items-center justify-center">
+            <div key={m.name} className="list-row flex items-center gap-4 animate-fade-up" style={{ animationDelay: `${i * 40}ms` }}>
+              <div className="flex w-6 items-center justify-center">
                 <span className={`pulse-dot ${m.status === 'active' ? 'bg-emerald-400' : 'bg-amber-400'}`} />
               </div>
-              <span className={`w-36 truncate text-xs font-semibold ${moduleColor(m.name)}`}>{m.name}</span>
-              <span className="flex-1 truncate text-[11px] text-white/30">{m.detail}</span>
-              <span className="font-mono text-xs text-white/60">{Number(m.count).toLocaleString()}</span>
+              <span className={`w-40 truncate text-[13px] font-bold ${moduleColor(m.name)}`}>{m.name}</span>
+              <span className="flex-1 truncate text-[12px] text-white/45">{m.detail}</span>
+              <span className="font-mono text-[13px] text-white/70">{Number(m.count).toLocaleString()}</span>
               <span className="badge blue">{m.tools}t</span>
               <span className="badge gray">{m.storage}</span>
             </div>
@@ -62,22 +62,22 @@ export default function OverviewPage() {
       </DataCard>
 
       <DataCard title="Activity stream" subtitle="Recent runtime events" accent="violet">
-        <div className="max-h-[320px] space-y-0 overflow-auto divide-y divide-white/[0.04]">
+        <div className="max-h-[390px] space-y-1 overflow-auto scroll-area divide-y divide-white/[0.05] pr-1">
           {(data.recent.events || []).slice(0, 12).map((e, i) => (
-            <div key={i} className="flex items-start gap-2 py-2 animate-fade-up" style={{ animationDelay: `${i * 30}ms` }}>
-              <span className="mt-0.5 pulse-dot bg-blue-400 shrink-0" />
+            <div key={i} className="list-row flex items-start gap-3 animate-fade-up" style={{ animationDelay: `${i * 30}ms` }}>
+              <span className="mt-1 pulse-dot bg-blue-400 shrink-0" />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs text-white/65">{String(e.content).slice(0, 120)}</p>
-                <p className="text-[10px] text-white/25">{String(e.actor)} · {String(e.event_type)}</p>
+                <p className="truncate text-[13px] text-white/72">{String(e.content).slice(0, 120)}</p>
+                <p className="mt-1 text-[11px] text-white/38">{String(e.actor)} · {String(e.event_type)}</p>
               </div>
             </div>
           ))}
           {(data.recent.facts || []).slice(0, 6).map((f, i) => (
-            <div key={`f-${i}`} className="flex items-start gap-2 py-2 animate-fade-up" style={{ animationDelay: `${(i + 12) * 30}ms` }}>
-              <span className="mt-0.5 pulse-dot bg-emerald-400 shrink-0" />
+            <div key={`f-${i}`} className="list-row flex items-start gap-3 animate-fade-up" style={{ animationDelay: `${(i + 12) * 30}ms` }}>
+              <span className="mt-1 pulse-dot bg-emerald-400 shrink-0" />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs text-white/65">{String(f.value).slice(0, 120)}</p>
-                <p className="text-[10px] text-white/25">{String(f.scope)} · {String(f.key)}</p>
+                <p className="truncate text-[13px] text-white/72">{String(f.value).slice(0, 120)}</p>
+                <p className="mt-1 text-[11px] text-white/38">{String(f.scope)} · {String(f.key)}</p>
               </div>
             </div>
           ))}
@@ -86,35 +86,35 @@ export default function OverviewPage() {
     </div>
 
     {/* Memory layers + CodeGraph/Brain */}
-    <div className="grid gap-3 xl:grid-cols-2">
+    <div className="dashboard-grid-2">
       <DataCard title="Memory 4 layers" subtitle="Raw → Facts → Vector → Working" accent="green">
-        <div className="divide-y divide-white/[0.04]">
+        <div className="divide-y divide-white/[0.05]">
           {data.memoryLayers.map((l, i) => (
-            <div key={l.name} className="flex items-center justify-between py-2 animate-fade-up" style={{ animationDelay: `${i * 50}ms` }}>
-              <div className="flex items-center gap-2">
+            <div key={l.name} className="list-row flex items-center justify-between gap-4 animate-fade-up" style={{ animationDelay: `${i * 50}ms` }}>
+              <div className="flex items-center gap-3 min-w-0">
                 <span className="badge violet">L{i + 1}</span>
-                <span className="text-xs font-medium text-white/70">{l.name}</span>
+                <span className="text-[13px] font-semibold text-white/78 truncate">{l.name}</span>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-[11px] text-white/28">{l.description}</span>
-                <span className="metric-value text-sm font-semibold text-violet-400 glow-violet">{l.count}</span>
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="truncate text-[12px] text-white/42">{l.description}</span>
+                <span className="metric-value text-base font-bold text-violet-300 glow-violet">{l.count}</span>
               </div>
             </div>
           ))}
         </div>
-        <div className="mt-2 flex flex-wrap gap-1.5 pt-2 border-t border-white/[0.04]">
+        <div className="mt-4 flex flex-wrap gap-2 pt-4 border-t border-white/[0.06]">
           {data.scopes.map(s => <StatusPill key={s.scope} tone="blue">{s.scope}: {s.count}</StatusPill>)}
         </div>
       </DataCard>
 
       <DataCard title="CodeGraph + Project Brain" subtitle="Source map and project intelligence" accent="cyan">
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-3">
           <MetricTile label="Files" value={data.counts.codegraph_files} tone="cyan" />
           <MetricTile label="Nodes" value={data.counts.codegraph_nodes} tone="violet" />
           <MetricTile label="Docs" value={data.projectBrain.docs} tone="green" />
           <MetricTile label="Decisions" value={data.projectBrain.decisions} tone="amber" />
         </div>
-        <div className="mt-2 flex flex-wrap gap-1.5 pt-2 border-t border-white/[0.04]">
+        <div className="mt-4 flex flex-wrap gap-2 pt-4 border-t border-white/[0.06]">
           {data.codegraph.languages.map(l => <StatusPill key={l.language} tone="cyan">{l.language}: {l.count}</StatusPill>)}
           {data.projectBrain.roadmapByStatus.map(r => <StatusPill key={r.status} tone="green">{r.status}: {r.count}</StatusPill>)}
         </div>

@@ -143,7 +143,7 @@ export default function ForgeBase9Page() {
   const tr = testResult as Record<string, any> | null;
 
   return (
-    <div className="space-y-3 max-h-screen">
+    <div className="page-shell !gap-4">
       <PageHeader
         title="Multi Agent"
         description="Provider registry, model catalog, and agent assignments."
@@ -159,7 +159,7 @@ export default function ForgeBase9Page() {
       {error && <div className="rounded-lg border border-rose-500/20 bg-rose-500/5 px-3 py-2 text-xs text-rose-300">{error}</div>}
 
       {/* Metrics */}
-      <div className="grid gap-2 grid-cols-4">
+      <div className="dashboard-grid-4">
         <MetricTile label="Providers" value={providers.length} tone="blue" />
         <MetricTile label="Models" value={models.length} tone="violet" />
         <MetricTile label="Prefixes" value={prefixes.length} tone="cyan" />
@@ -167,10 +167,10 @@ export default function ForgeBase9Page() {
       </div>
 
       {/* Balanced layout: sidebar & agent panel */}
-      <div className="grid gap-3 lg:grid-cols-[1fr_2fr]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(320px,.9fr)_minmax(0,2fr)]">
         
         {/* Left Column: Providers + Catalog */}
-        <div className="space-y-3">
+        <div className="section-stack">
           
           <DataCard title="Providers" accent="blue">
             <div className="space-y-1.5 max-h-[140px] overflow-auto pr-1">
@@ -249,10 +249,10 @@ export default function ForgeBase9Page() {
         </div>
 
         {/* Right Column: Agent Assignments */}
-        <div className="space-y-3">
+        <div className="section-stack">
           <SectionTitle title="Agent assignments" subtitle="Model routing for pipeline agents (Drag & drop to map)" />
           
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {AGENTS.map((agent, i) => {
               const meta = AGENT_META[agent] || { icon: "●", role: agent, tone: "blue" };
               const current = assignments.find(a => a.agent_id === agent);
@@ -430,3 +430,4 @@ export default function ForgeBase9Page() {
     </div>
   );
 }
+

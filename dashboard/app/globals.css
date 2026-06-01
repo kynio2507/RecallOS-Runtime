@@ -17,22 +17,26 @@
 
 :root {
   --background: #070a12;
-  --foreground: #e2e8f0;
-  --surface: #0c1018;
-  --surface-2: #111827;
-  --surface-3: #161f31;
-  --surface-hover: #151d2e;
-  --border-color: rgba(255,255,255,0.07);
-  --border-strong: rgba(255,255,255,0.13);
-  --muted: #64748b;
+  --foreground: #edf3ff;
+  --surface: #0f1522;
+  --surface-2: #151d2e;
+  --surface-3: #1b263a;
+  --surface-hover: #202d44;
+  --border-color: rgba(255,255,255,0.09);
+  --border-strong: rgba(255,255,255,0.16);
+  --muted: #77849a;
   --primary: #3b82f6;
   --violet: #8b5cf6;
   --cyan: #22d3ee;
   --emerald: #10b981;
   --amber: #f59e0b;
   --rose: #fb7185;
-  --text-secondary: rgba(255,255,255,0.45);
-  --text-tertiary: rgba(255,255,255,0.28);
+  --text-secondary: rgba(255,255,255,0.62);
+  --text-tertiary: rgba(255,255,255,0.40);
+  --page-pad-x: 28px;
+  --page-pad-y: 24px;
+  --section-gap: 24px;
+  --card-gap: 16px;
 }
 
 * { box-sizing: border-box; margin: 0; }
@@ -84,16 +88,16 @@ body::before {
 .card, .data-card {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(180deg, rgba(17,24,39,.78), rgba(13,17,28,.88));
+  background: linear-gradient(180deg, rgba(19,27,43,.84), rgba(12,17,29,.92));
   border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: .75rem;
-  box-shadow: 0 8px 32px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.03);
-  transition: border-color .16s ease, box-shadow .16s ease;
+  border-radius: 14px;
+  padding: 1.1rem 1.25rem;
+  box-shadow: 0 10px 32px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.04);
+  transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
 }
 .card:hover, .data-card:hover {
-  border-color: rgba(59,130,246,.22);
-  box-shadow: 0 10px 38px rgba(0,0,0,.28), 0 0 0 1px rgba(59,130,246,.06);
+  border-color: rgba(96,165,250,.26);
+  box-shadow: 0 12px 40px rgba(0,0,0,.30), 0 0 0 1px rgba(59,130,246,.06);
 }
 
 .glass-panel {
@@ -226,3 +230,34 @@ input[type="text"]:focus, textarea:focus, select:focus {
 @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 .skeleton { position: relative; overflow: hidden; background: rgba(148,163,184,.06); border-radius: 8px; }
 .skeleton::after { content:""; position:absolute; inset:0; background: linear-gradient(90deg, transparent, rgba(59,130,246,.1), transparent); animation: shimmer 1.4s infinite; }
+
+/* ── Production dashboard utilities ── */
+.page-shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--section-gap);
+  padding: var(--page-pad-y) var(--page-pad-x);
+}
+.section-stack { display: flex; flex-direction: column; gap: 16px; }
+.dashboard-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--card-gap); }
+.dashboard-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--card-gap); }
+.dashboard-grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--card-gap); }
+.dashboard-grid-main { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(340px, .9fr); gap: var(--card-gap); align-items: start; }
+.dashboard-grid-aside { display: grid; grid-template-columns: minmax(300px, .55fr) minmax(0, 1fr); gap: var(--card-gap); align-items: start; }
+.t-page-title { font-size: 28px; font-weight: 750; line-height: 1.2; letter-spacing: -0.04em; color: #f8fbff; }
+.t-section-title { font-size: 16px; font-weight: 700; color: #eef5ff; }
+.t-card-title { font-size: 14px; font-weight: 700; color: #eef5ff; }
+.t-body { font-size: 14px; line-height: 1.65; color: rgba(226,232,240,.78); }
+.t-caption { font-size: 12px; line-height: 1.45; color: rgba(226,232,240,.46); }
+.t-label { font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: rgba(226,232,240,.46); }
+.scroll-area { scrollbar-gutter: stable; }
+.list-row { border-radius: 10px; padding: 12px 14px; transition: background .16s ease, border-color .16s ease; }
+.list-row:hover { background: rgba(255,255,255,.035); }
+@media (max-width: 1280px) {
+  .dashboard-grid-main, .dashboard-grid-aside { grid-template-columns: 1fr; }
+  .dashboard-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 840px) {
+  .page-shell { padding: 18px; }
+  .dashboard-grid-2, .dashboard-grid-3, .dashboard-grid-4 { grid-template-columns: 1fr; }
+}

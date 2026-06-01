@@ -17,10 +17,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full">
         <Sidebar />
         <main
-          className="relative z-10 min-h-screen px-4 py-4"
+          className="relative z-10 min-h-screen"
           style={{ marginLeft: 220, width: "calc(100vw - 220px)" }}
         >
-          <div className="mx-auto max-w-[1600px] space-y-4">
+          <div className="mx-auto max-w-[1600px]">
             {children}
           </div>
         </main>
