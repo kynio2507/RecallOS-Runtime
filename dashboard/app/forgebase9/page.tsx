@@ -110,12 +110,19 @@ export default function ForgeBase9Page() {
     } catch (e) { setError(String(e)); } finally { setBusy(false); }
   };
 
-  const runTest = async () => {
+  const runTest = async (customProviderId?: string, customModelId?: string) => {
+    const pid = customProviderId || test.provider_id;
+    const mid = customModelId || test.model_id;
+    if (!pid || !mid) return;
     setBusy(true); setError(""); setTestResult(null);
     try {
-      const r = await fetch("/api/forgebase9/test", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(test) }).then(r => r.json());
+      const r = await fetch("/api/forgebase9/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider_id: pid, model_id: mid, prompt: "Reply with exactly: RecallOS model test OK" })
+      }).then(r => r.json());
       if (r.error) throw new Error(r.error);
-      setTestResult(r);
+      setTestResult({ ...r, model_id: mid });
     } catch (e) { setError(String(e)); } finally { setBusy(false); }
   };
 
@@ -199,18 +206,26 @@ export default function ForgeBase9Page() {
           </DataCard>
 
           <DataCard title="Model catalog" subtitle={`${models.length} models · ${prefixes.length} prefixes`} accent="violet">
-            <div className="flex gap-1.5 mb-2">
-              <select className="w-24 text-[11px] !py-0.5" value={mForm.provider_id} onChange={e => setMForm({ ...mForm, provider_id: e.target.value })}>
-                <option value="">Provider</option>
-                {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
-              <input type="text" className="flex-1 text-[11px] !py-0.5" placeholder="model id" value={mForm.model_id} onChange={e => setMForm({ ...mForm, model_id: e.target.value })} />
-              <button className="btn btn-primary !py-0.5 !px-2.5 !text-[10px]" onClick={addModel} disabled={busy || !mForm.provider_id || !mForm.model_id}>Add</button>
+            {/* Split inputs into two rows and make them larger */}
+            <div className="space-y-2.5 mb-3 border-b border-white/[0.04] pb-3">
+              <div>
+                <label className="text-[10px] text-white/40 block mb-1">Provider</label>
+                <select className="w-full text-xs !py-1 !px-2 bg-black/40 border border-white/[0.08] rounded-md text-white/80" value={mForm.provider_id} onChange={e => setMForm({ ...mForm, provider_id: e.target.value })}>
+                  <option value="">Select Provider</option>
+                  {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] text-white/40 block mb-1">Model ID</label>
+                <input type="text" className="w-full text-xs !py-1 !px-2 bg-black/40 border border-white/[0.08] rounded-md text-white/80 placeholder:text-white/25" placeholder="e.g. ag/claude-sonnet-4-6" value={mForm.model_id} onChange={e => setMForm({ ...mForm, model_id: e.target.value })} />
+              </div>
+              <button className="btn btn-primary w-full !py-1 !text-xs" onClick={addModel} disabled={busy || !mForm.provider_id || !mForm.model_id}>Add Model to Catalog</button>
             </div>
-            {prefixes.length > 0 && <div className="flex flex-wrap gap-1 mb-2">{prefixes.map(p => <StatusPill key={p} tone="cyan">{p}</StatusPill>)}</div>}
+
+            {prefixes.length > 0 && <div className="flex flex-wrap gap-1 mb-2.5">{prefixes.map(p => <StatusPill key={p} tone="cyan">{p}</StatusPill>)}</div>}
             
-            <div className="text-[10px] text-white/40 mb-1.5 italic">Drag models to Agent cards on the right to assign.</div>
-            <div className="space-y-1.5 max-h-[360px] overflow-auto pr-1">
+            <div className="text-[10px] text-white/40 mb-2 italic">Drag models to Agent cards on the right. Press ▶ to run a quick test.</div>
+            <div className="space-y-1.5 max-h-[280px] overflow-auto pr-1">
               {models.map((m, i) => (
                 <div
                   key={m.id}
@@ -226,10 +241,36 @@ export default function ForgeBase9Page() {
                   <span className="badge violet !text-[8px] !px-1">{m.provider_name || "?"}</span>
                   {m.prefix && <span className="badge cyan !text-[8px] !px-1">{m.prefix}</span>}
                   <span className="font-mono text-[11px] text-white/60 truncate flex-1">{m.model_id}</span>
+                  <button
+                    title="Test model"
+                    className="btn btn-ghost !p-1 !h-6 !w-6 flex items-center justify-center text-cyan-400 hover:bg-cyan-500/10 rounded-md ml-auto"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      runTest(m.provider_id, m.model_id);
+                    }}
+                    disabled={busy}
+                  >
+                    ▶
+                  </button>
                 </div>
               ))}
               {!models.length && <div className="py-3 text-center text-xs text-white/20">No models in catalog</div>}
             </div>
+
+            {/* Inline Test Result Box */}
+            {tr && (
+              <div className="mt-3 animate-fade-up rounded-lg border border-white/[0.06] bg-white/[0.02] p-2.5 relative">
+                <button className="absolute top-2 right-2 text-white/30 hover:text-white/60 text-xs font-bold" onClick={() => setTestResult(null)}>✕</button>
+                <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
+                  <StatusPill tone={tr.ok ? "green" : "red"}>{tr.ok ? "Success" : "Warning"}</StatusPill>
+                  <span className="text-[10px] text-white/25">{tr.latency_ms}ms</span>
+                </div>
+                <div className="font-mono text-[10px] text-white/50 truncate mb-1">{tr.model_id}</div>
+                {tr.content && (
+                  <div className="text-[10px] text-white/65 whitespace-pre-wrap max-h-[100px] overflow-auto border-t border-white/[0.04] pt-1 mt-1">{tr.content as string}</div>
+                )}
+              </div>
+            )}
           </DataCard>
         </div>
 
@@ -349,39 +390,6 @@ export default function ForgeBase9Page() {
           </div>
         </div>
       </div>
-
-      {/* Direct model test — compact inline */}
-      <DataCard title="Direct model test" subtitle="Test any model through RecallOS registry" accent="cyan">
-        <div className="flex gap-2 flex-wrap">
-          <select className="w-36" value={test.provider_id} onChange={e => setTest({ ...test, provider_id: e.target.value, model_id: modelsFor(e.target.value)[0]?.model_id || "" })}>
-            <option value="">Provider</option>
-            {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
-          <select className="w-56" value={test.model_id} onChange={e => setTest({ ...test, model_id: e.target.value })}>
-            <option value="">Model</option>
-            {modelsFor(test.provider_id).map(m => <option key={m.model_id} value={m.model_id}>{m.model_id}</option>)}
-          </select>
-          <input type="text" className="flex-1 min-w-[200px]" value={test.prompt} onChange={e => setTest({ ...test, prompt: e.target.value })} placeholder="Test prompt" />
-          <button className="btn btn-primary" disabled={busy || !test.provider_id || !test.model_id} onClick={runTest}>Test</button>
-        </div>
-        {tr && (
-          <div className="mt-3 animate-fade-up rounded-lg border border-white/[0.06] bg-white/[0.02] p-3">
-            <div className="flex flex-wrap items-center gap-2 mb-2">
-              <StatusPill tone={tr.ok ? "green" : "red"}>{tr.ok ? "Success" : "Warning"}</StatusPill>
-              <span className="font-mono text-[11px] text-white/50">{tr.model_id}</span>
-              <span className="text-[10px] text-white/25">{tr.latency_ms}ms</span>
-              {tr.finish_reason && <span className="badge gray">{tr.finish_reason as string}</span>}
-              {tr.usage && <span className="text-[10px] text-white/20">{(tr.usage as any).total_tokens} tok</span>}
-            </div>
-            {(tr.warnings as string[])?.length > 0 && (
-              <div className="mb-2">{(tr.warnings as string[]).map((w, i) => <div key={i} className="text-[10px] text-amber-400/60">⚠ {w}</div>)}</div>
-            )}
-            {tr.content && (
-              <div className="text-xs text-white/65 whitespace-pre-wrap max-h-[120px] overflow-auto">{tr.content as string}</div>
-            )}
-          </div>
-        )}
-      </DataCard>
     </div>
   );
 }
