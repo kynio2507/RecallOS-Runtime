@@ -16,22 +16,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full dark`}>
       <body className="min-h-full">
         <Sidebar />
-        <main className="relative z-10 min-h-screen px-4 py-4 lg:ml-[220px]">
+        <main className="relative z-10 min-h-screen ml-[220px] w-[calc(100%-220px)] px-4 py-4">
           <div className="mx-auto max-w-[1600px] space-y-4">
-            <header className="glass-panel flex flex-wrap items-center justify-between gap-2 px-3 py-2">
-              <div className="flex items-center gap-2">
-                <span className="pulse-dot bg-emerald-400" />
-                <div>
-                  <div className="text-xs font-semibold text-white">Runtime online</div>
-                  <div className="text-[10px] text-white/28">localhost:3303 · PostgreSQL · SQLite · CodeGraph</div>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                <span className="badge green">10 modules</span>
-                <span className="badge blue">78 tools</span>
-                <span className="badge violet">dark ops</span>
-              </div>
-            </header>
             {children}
           </div>
         </main>
