@@ -26,7 +26,10 @@ export function Sidebar() {
   const pathname = usePathname();
   const groups = [...new Set(NAV.map(n => n.group))];
   return (
-    <aside className="fixed left-0 top-0 z-50 hidden h-full w-[220px] border-r border-white/[0.06] bg-[#070a12]/90 backdrop-blur-2xl lg:flex lg:flex-col">
+    <aside
+      className="fixed left-0 top-0 z-50 h-full border-r border-white/[0.06] bg-[#070a12]/90 backdrop-blur-2xl flex flex-col"
+      style={{ width: 220 }}
+    >
       <div className="p-4">
         <div className="flex items-center gap-2.5">
           <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-blue-500 to-violet-500 text-sm font-bold text-white shadow-lg shadow-blue-500/15">R</div>

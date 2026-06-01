@@ -16,7 +16,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full dark`}>
       <body className="min-h-full">
         <Sidebar />
-        <main className="relative z-10 min-h-screen ml-[220px] w-[calc(100%-220px)] px-4 py-4">
+        <main
+          className="relative z-10 min-h-screen px-4 py-4"
+          style={{ marginLeft: 220, width: "calc(100vw - 220px)" }}
+        >
           <div className="mx-auto max-w-[1600px] space-y-4">
             {children}
           </div>
