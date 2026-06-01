@@ -180,14 +180,14 @@ export default function ForgeBase9Page() {
                     <div className="flex items-center gap-1.5">
                       <span className={`pulse-dot ${p.has_api_key ? "bg-emerald-400" : "bg-amber-400"}`} />
                       <span className="text-[11px] font-semibold text-white/80 truncate">{p.name}</span>
-                      <span className="text-[9px] text-white/30 truncate font-mono">({p.api_key_storage})</span>
+                      <span className="text-[11px] text-white/30 truncate font-mono">({p.api_key_storage})</span>
                     </div>
-                    <div className="mt-0.5 font-mono text-[9px] text-white/20 truncate">{p.base_url}</div>
+                    <div className="mt-0.5 font-mono text-[11px] text-white/20 truncate">{p.base_url}</div>
                   </div>
                   <div className="flex gap-1 shrink-0">
-                    <button className="btn btn-ghost !py-0.5 !px-1.5 !text-[9px] !rounded" onClick={() => discover(p.id)} disabled={busy}>Sync</button>
-                    <button className="btn btn-ghost !py-0.5 !px-1.5 !text-[9px] !rounded" onClick={() => editProvider(p)} disabled={busy}>Edit</button>
-                    <button className="btn btn-ghost !py-0.5 !px-1.5 !text-[9px] !rounded !text-rose-400" onClick={() => deleteProvider(p.id, p.name)} disabled={busy}>✕</button>
+                    <button className="btn btn-ghost !py-1 !px-2 !text-[11px] !rounded-md" onClick={() => discover(p.id)} disabled={busy}>Sync</button>
+                    <button className="btn btn-ghost !py-1 !px-2 !text-[11px] !rounded-md" onClick={() => editProvider(p)} disabled={busy}>Edit</button>
+                    <button className="btn btn-ghost !py-1 !px-2 !text-[11px] !rounded-md !text-rose-400" onClick={() => deleteProvider(p.id, p.name)} disabled={busy}>✕</button>
                   </div>
                 </div>
               ))}
@@ -198,7 +198,7 @@ export default function ForgeBase9Page() {
           <DataCard title="Model catalog" subtitle={`${models.length} models · ${prefixes.length} prefixes`} accent="violet">
             {prefixes.length > 0 && <div className="flex flex-wrap gap-1 mb-2 max-h-[36px] overflow-y-auto">{prefixes.map(p => <StatusPill key={p} tone="cyan">{p}</StatusPill>)}</div>}
             
-            <div className="text-[10px] text-white/40 mb-1.5 italic">Drag models to Agent cards. Press ▶ to run a quick test.</div>
+            <div className="text-xs text-white/40 mb-1.5 italic">Drag models to Agent cards. Press ▶ to run a quick test.</div>
             <div className="space-y-1 max-h-[220px] overflow-auto pr-1">
               {models.map((m, i) => (
                 <div
@@ -211,13 +211,13 @@ export default function ForgeBase9Page() {
                   className="flex items-center gap-1.5 rounded-md border border-white/[0.04] bg-white/[0.015] px-2 py-1.5 cursor-grab active:cursor-grabbing hover:bg-white/[0.05] hover:border-white/[0.1] transition-all select-none animate-fade-up"
                   style={{ animationDelay: `${i * 15}ms` }}
                 >
-                  <span className="text-[10px] text-white/30 mr-0.5 select-none font-bold">⋮⋮</span>
-                  <span className="badge violet !text-[8px] !px-1">{m.provider_name || "?"}</span>
-                  {m.prefix && <span className="badge cyan !text-[8px] !px-1">{m.prefix}</span>}
+                  <span className="text-xs text-white/30 mr-0.5 select-none font-bold">⋮⋮</span>
+                  <span className="badge violet !text-[10px] !px-1">{m.provider_name || "?"}</span>
+                  {m.prefix && <span className="badge cyan !text-[10px] !px-1">{m.prefix}</span>}
                   <span className="font-mono text-[11px] text-white/60 truncate flex-1">{m.model_id}</span>
                   <button
                     title="Test model"
-                    className="btn btn-ghost !p-1 !h-5 !w-5 flex items-center justify-center text-cyan-400 hover:bg-cyan-500/10 rounded ml-auto"
+                    className="btn btn-ghost !p-1.5 !h-7 !w-7 flex items-center justify-center text-cyan-400 hover:bg-cyan-500/10 rounded ml-auto"
                     onClick={(e) => {
                       e.stopPropagation();
                       runTest(m.provider_id, m.model_id);
@@ -234,14 +234,14 @@ export default function ForgeBase9Page() {
             {/* Inline Test Result Box */}
             {tr && (
               <div className="mt-2 animate-fade-up rounded border border-white/[0.06] bg-white/[0.02] p-2 relative">
-                <button className="absolute top-1.5 right-1.5 text-white/30 hover:text-white/60 text-[10px] font-bold" onClick={() => setTestResult(null)}>✕</button>
+                <button className="absolute top-1.5 right-1.5 text-white/30 hover:text-white/60 text-xs font-bold" onClick={() => setTestResult(null)}>✕</button>
                 <div className="flex flex-wrap items-center gap-1.5 mb-1">
                   <StatusPill tone={tr.ok ? "green" : "red"}>{tr.ok ? "Success" : "Warning"}</StatusPill>
-                  <span className="text-[9px] text-white/25">{tr.latency_ms}ms</span>
+                  <span className="text-[11px] text-white/25">{tr.latency_ms}ms</span>
                 </div>
-                <div className="font-mono text-[10px] text-white/50 truncate mb-1">{tr.model_id}</div>
+                <div className="font-mono text-xs text-white/50 truncate mb-1">{tr.model_id}</div>
                 {tr.content && (
-                  <div className="text-[10px] text-white/65 whitespace-pre-wrap max-h-[80px] overflow-auto border-t border-white/[0.04] pt-1 mt-1 font-mono">{tr.content as string}</div>
+                  <div className="text-xs text-white/65 whitespace-pre-wrap max-h-[80px] overflow-auto border-t border-white/[0.04] pt-1 mt-1 font-mono">{tr.content as string}</div>
                 )}
               </div>
             )}
@@ -299,7 +299,7 @@ export default function ForgeBase9Page() {
                       <div className={`grid h-7 w-7 place-items-center rounded-lg text-sm ${isDragOver ? "bg-emerald-500/20 text-emerald-400" : `${TONE_BG[meta.tone]} ${TONE_TEXT[meta.tone]}`}`}>{meta.icon}</div>
                       <div>
                         <div className={`text-xs font-bold ${isDragOver ? "text-emerald-400" : TONE_TEXT[meta.tone]} ${TONE_GLOW[meta.tone]}`}>{meta.role}</div>
-                        <div className="font-mono text-[9px] text-white/25">{agent}</div>
+                        <div className="font-mono text-[11px] text-white/25">{agent}</div>
                       </div>
                     </div>
 
@@ -308,14 +308,14 @@ export default function ForgeBase9Page() {
                       <div className="mb-3 rounded border border-white/[0.05] bg-white/[0.02] p-2">
                         <div className="flex items-center gap-1">
                           <span className="pulse-dot bg-emerald-400" />
-                          <span className="text-[9px] text-white/40 uppercase tracking-wider font-semibold">Active</span>
+                          <span className="text-[11px] text-white/40 uppercase tracking-wider font-semibold">Active</span>
                         </div>
-                        <div className="mt-0.5 font-mono text-[10px] text-white/80 truncate font-semibold">{current.model_id}</div>
-                        <div className="text-[9px] text-white/40">via <span className="text-white/65">{current.provider_name}</span></div>
+                        <div className="mt-0.5 font-mono text-xs text-white/80 truncate font-semibold">{current.model_id}</div>
+                        <div className="text-[11px] text-white/40">via <span className="text-white/65">{current.provider_name}</span></div>
                       </div>
                     ) : (
                       <div className="mb-3 rounded border border-dashed border-white/[0.08] bg-white/[0.005] p-3 text-center">
-                        <span className="text-[9px] text-white/20 uppercase tracking-wider font-medium">Unassigned</span>
+                        <span className="text-[11px] text-white/20 uppercase tracking-wider font-medium">Unassigned</span>
                       </div>
                     )}
                   </div>
@@ -329,7 +329,7 @@ export default function ForgeBase9Page() {
                         ? "border-emerald-400/40 bg-emerald-500/5 text-emerald-400" 
                         : "border-white/[0.04] bg-white/[0.005] text-white/25"
                     }`}>
-                      <span className="text-[9px] font-mono select-none block">
+                      <span className="text-[11px] font-mono select-none block">
                         {isDragOver ? "✓ Drop to assign" : "⬇ Drag model here"}
                       </span>
                     </div>
@@ -337,20 +337,20 @@ export default function ForgeBase9Page() {
                     {/* Manual Override dropdown (collapsible) */}
                     <div className="border-t border-white/[0.04] pt-1">
                       <details className="group">
-                        <summary className="text-[8px] text-white/30 cursor-pointer select-none hover:text-white/50 transition-colors list-none flex items-center justify-between">
+                        <summary className="text-[10px] text-white/30 cursor-pointer select-none hover:text-white/50 transition-colors list-none flex items-center justify-between">
                           <span>Manual override</span>
                           <span className="transition-transform group-open:rotate-180">▾</span>
                         </summary>
                         <div className="space-y-1 mt-1 animate-fade-in">
-                          <select className="!py-0.5 !px-1.5 !text-[9px] w-full" value={draft.provider_id} onChange={e => { const pid = e.target.value; setAForm({ ...aForm, [agent]: { provider_id: pid, model_id: modelsFor(pid)[0]?.model_id || "" } }); }}>
+                          <select className="!py-1 !px-2 !text-[11px] w-full" value={draft.provider_id} onChange={e => { const pid = e.target.value; setAForm({ ...aForm, [agent]: { provider_id: pid, model_id: modelsFor(pid)[0]?.model_id || "" } }); }}>
                             <option value="">Select provider</option>
                             {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                           </select>
-                          <select className="!py-0.5 !px-1.5 !text-[9px] w-full" value={draft.model_id} onChange={e => setAForm({ ...aForm, [agent]: { ...draft, model_id: e.target.value } })}>
+                          <select className="!py-1 !px-2 !text-[11px] w-full" value={draft.model_id} onChange={e => setAForm({ ...aForm, [agent]: { ...draft, model_id: e.target.value } })}>
                             <option value="">Select model</option>
                             {modelsFor(draft.provider_id).map(m => <option key={m.model_id} value={m.model_id}>{m.model_id}</option>)}
                           </select>
-                          <button className="btn btn-ghost w-full !py-0.5 !text-[9px] !rounded-md" disabled={busy || !draft.provider_id || !draft.model_id} onClick={() => saveAssignment(agent)}>
+                          <button className="btn btn-ghost w-full !py-1 !text-[11px] !rounded-md-md" disabled={busy || !draft.provider_id || !draft.model_id} onClick={() => saveAssignment(agent)}>
                             Apply assignment
                           </button>
                         </div>
@@ -375,25 +375,25 @@ export default function ForgeBase9Page() {
             </div>
             <div className="space-y-2">
               <div>
-                <label className="text-[10px] text-white/40 block mb-0.5">Name</label>
+                <label className="text-xs text-white/40 block mb-0.5">Name</label>
                 <input type="text" className="w-full text-xs !py-1 bg-black/40 border border-white/[0.08] rounded-md text-white/80" placeholder="e.g. 9router" value={pForm.name} onChange={e => setPForm({ ...pForm, name: e.target.value })} />
               </div>
               <div>
-                <label className="text-[10px] text-white/40 block mb-0.5">Base URL</label>
+                <label className="text-xs text-white/40 block mb-0.5">Base URL</label>
                 <input type="text" className="w-full text-xs !py-1 bg-black/40 border border-white/[0.08] rounded-md text-white/80" placeholder="Base URL" value={pForm.base_url} onChange={e => setPForm({ ...pForm, base_url: e.target.value })} />
               </div>
               <div>
-                <label className="text-[10px] text-white/40 block mb-0.5">API Key (optional)</label>
+                <label className="text-xs text-white/40 block mb-0.5">API Key (optional)</label>
                 <input type="password" className="w-full text-xs !py-1 bg-black/40 border border-white/[0.08] rounded-md text-white/80" placeholder="sk-..." value={pForm.api_key} onChange={e => setPForm({ ...pForm, api_key: e.target.value })} />
               </div>
               <div>
-                <label className="text-[10px] text-white/40 block mb-0.5">Env Var (optional)</label>
+                <label className="text-xs text-white/40 block mb-0.5">Env Var (optional)</label>
                 <input type="text" className="w-full text-xs !py-1 bg-black/40 border border-white/[0.08] rounded-md text-white/80" placeholder="e.g. ROUTER_API_KEY" value={pForm.api_key_env_var} onChange={e => setPForm({ ...pForm, api_key_env_var: e.target.value })} />
               </div>
             </div>
             <div className="mt-4 flex justify-end gap-1.5 pt-2 border-t border-white/[0.04]">
-              <button className="btn btn-ghost !py-0.5 !px-2.5 !text-[11px]" onClick={cancelEdit}>Cancel</button>
-              <button className="btn btn-primary !py-0.5 !px-3.5 !text-[11px]" disabled={busy || !pForm.name || !pForm.base_url} onClick={saveProvider}>{pForm.id ? "Update" : "Save"}</button>
+              <button className="btn btn-ghost !py-1 !px-2.5 !text-[11px]" onClick={cancelEdit}>Cancel</button>
+              <button className="btn btn-primary !py-1 !px-3.5 !text-[11px]" disabled={busy || !pForm.name || !pForm.base_url} onClick={saveProvider}>{pForm.id ? "Update" : "Save"}</button>
             </div>
           </div>
         </div>
@@ -409,20 +409,20 @@ export default function ForgeBase9Page() {
             </div>
             <div className="space-y-2">
               <div>
-                <label className="text-[10px] text-white/40 block mb-0.5">Provider</label>
+                <label className="text-xs text-white/40 block mb-0.5">Provider</label>
                 <select className="w-full text-xs !py-1 bg-black/40 border border-white/[0.08] rounded-md text-white/80" value={mForm.provider_id} onChange={e => setMForm({ ...mForm, provider_id: e.target.value })}>
                   <option value="">Select Provider</option>
                   {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </div>
               <div>
-                <label className="text-[10px] text-white/40 block mb-0.5">Model ID</label>
+                <label className="text-xs text-white/40 block mb-0.5">Model ID</label>
                 <input type="text" className="w-full text-xs !py-1 bg-black/40 border border-white/[0.08] rounded-md text-white/80 placeholder:text-white/25" placeholder="e.g. ag/claude-sonnet-4-6" value={mForm.model_id} onChange={e => setMForm({ ...mForm, model_id: e.target.value })} />
               </div>
             </div>
             <div className="mt-4 flex justify-end gap-1.5 pt-2 border-t border-white/[0.04]">
-              <button className="btn btn-ghost !py-0.5 !px-2.5 !text-[11px]" onClick={() => setShowModelModal(false)}>Cancel</button>
-              <button className="btn btn-primary !py-0.5 !px-3.5 !text-[11px]" disabled={busy || !mForm.provider_id || !mForm.model_id} onClick={async () => { await addModel(); setShowModelModal(false); }}>Add Model</button>
+              <button className="btn btn-ghost !py-1 !px-2.5 !text-[11px]" onClick={() => setShowModelModal(false)}>Cancel</button>
+              <button className="btn btn-primary !py-1 !px-3.5 !text-[11px]" disabled={busy || !mForm.provider_id || !mForm.model_id} onClick={async () => { await addModel(); setShowModelModal(false); }}>Add Model</button>
             </div>
           </div>
         </div>
@@ -430,3 +430,4 @@ export default function ForgeBase9Page() {
     </div>
   );
 }
+
