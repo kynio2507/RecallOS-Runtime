@@ -15,43 +15,40 @@ const NAV = [
   { href: "/forgebase9", label: "Multi Agent", icon: "✦", group: "Agents", tone: "violet" },
 ];
 
-const toneClass: Record<string, string> = {
-  blue: "from-blue-400 to-cyan-300 text-blue-200",
-  green: "from-emerald-400 to-cyan-300 text-emerald-200",
-  violet: "from-violet-400 to-fuchsia-300 text-violet-200",
-  cyan: "from-cyan-400 to-blue-300 text-cyan-200",
-  amber: "from-amber-400 to-orange-300 text-amber-200",
+const toneText: Record<string, string> = {
+  blue: "text-blue-400", green: "text-emerald-400", violet: "text-violet-400", cyan: "text-cyan-400", amber: "text-amber-400",
+};
+const toneActive: Record<string, string> = {
+  blue: "from-blue-400", green: "from-emerald-400", violet: "from-violet-400", cyan: "from-cyan-400", amber: "from-amber-400",
 };
 
 export function Sidebar() {
   const pathname = usePathname();
   const groups = [...new Set(NAV.map(n => n.group))];
   return (
-    <aside className="fixed left-0 top-0 z-50 hidden h-full w-[264px] border-r border-white/10 bg-[#070a12]/86 backdrop-blur-2xl lg:flex lg:flex-col">
-      <div className="p-5">
-        <div className="rounded-3xl border border-blue-400/20 bg-blue-400/10 p-4 shadow-[0_0_45px_rgba(59,130,246,.12)]">
-          <div className="flex items-center gap-3">
-            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-blue-500 to-violet-500 font-black text-white shadow-lg shadow-blue-500/20">R</div>
-            <div>
-              <h1 className="text-lg font-black tracking-tight text-slate-100">RecallOS</h1>
-              <p className="kicker">runtime command</p>
-            </div>
+    <aside className="fixed left-0 top-0 z-50 hidden h-full w-[220px] border-r border-white/[0.06] bg-[#070a12]/90 backdrop-blur-2xl lg:flex lg:flex-col">
+      <div className="p-4">
+        <div className="flex items-center gap-2.5">
+          <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-blue-500 to-violet-500 text-sm font-bold text-white shadow-lg shadow-blue-500/15">R</div>
+          <div>
+            <h1 className="text-sm font-bold tracking-tight text-white">RecallOS</h1>
+            <p className="text-[10px] text-white/28">runtime v1.0</p>
           </div>
-          <div className="signal-line my-4" />
-          <div className="flex items-center justify-between text-xs text-slate-400"><span>system pulse</span><span className="text-emerald-300">nominal</span></div>
         </div>
+        <div className="signal-line mt-3 mb-1" />
       </div>
-      <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
+
+      <nav className="flex-1 space-y-3 overflow-y-auto px-2 pb-3">
         {groups.map(group => (
           <div key={group}>
-            <div className="kicker px-3 pb-2">{group}</div>
-            <div className="space-y-1">
+            <div className="kicker px-2.5 pb-1.5">{group}</div>
+            <div className="space-y-0.5">
               {NAV.filter(n => n.group === group).map(item => {
                 const active = pathname === item.href;
                 return (
-                  <Link key={item.href} href={item.href} className={`group relative flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold transition-all ${active ? "bg-white/[0.08] text-slate-50 shadow-[inset_0_0_0_1px_rgba(148,163,184,.14)]" : "text-slate-400 hover:bg-white/[0.05] hover:text-slate-100"}`}>
-                    {active && <span className={`absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-gradient-to-b ${toneClass[item.tone]}`} />}
-                    <span className={`grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br ${toneClass[item.tone]} bg-opacity-10 text-base`}>{item.icon}</span>
+                  <Link key={item.href} href={item.href} className={`group relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-all ${active ? "bg-white/[0.06] text-white shadow-[inset_0_0_0_1px_rgba(148,163,184,.1)]" : "text-white/40 hover:bg-white/[0.03] hover:text-white/70"}`}>
+                    {active && <span className={`absolute left-0 top-1/2 h-5 w-[2px] -translate-y-1/2 rounded-r-full bg-gradient-to-b ${toneActive[item.tone] || "from-blue-400"} to-transparent`} />}
+                    <span className={`text-sm ${active ? toneText[item.tone] || "text-blue-400" : "text-white/25"}`}>{item.icon}</span>
                     <span>{item.label}</span>
                   </Link>
                 );
@@ -60,12 +57,13 @@ export function Sidebar() {
           </div>
         ))}
       </nav>
-      <div className="p-4">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-          <div className="mb-2 flex items-center gap-2 text-xs text-slate-300"><span className="status-dot green" />Live index</div>
-          <div className="grid grid-cols-2 gap-2 text-center">
-            <div className="rounded-xl bg-white/[0.04] p-2"><div className="metric-value text-lg font-black text-blue-200">7</div><div className="text-[10px] text-slate-500">modules</div></div>
-            <div className="rounded-xl bg-white/[0.04] p-2"><div className="metric-value text-lg font-black text-violet-200">68</div><div className="text-[10px] text-slate-500">tools</div></div>
+
+      <div className="p-3">
+        <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3">
+          <div className="flex items-center gap-1.5 text-[10px] text-white/35"><span className="pulse-dot bg-emerald-400" />Live</div>
+          <div className="mt-2 grid grid-cols-2 gap-1.5 text-center">
+            <div className="rounded-md bg-white/[0.03] py-1.5"><div className="metric-value text-sm font-bold text-blue-300">10</div><div className="text-[9px] text-white/25">modules</div></div>
+            <div className="rounded-md bg-white/[0.03] py-1.5"><div className="metric-value text-sm font-bold text-violet-300">78</div><div className="text-[9px] text-white/25">tools</div></div>
           </div>
         </div>
       </div>

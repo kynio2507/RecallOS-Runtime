@@ -16,20 +16,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full dark`}>
       <body className="min-h-full">
         <Sidebar />
-        <main className="relative z-10 min-h-screen px-4 py-5 md:px-7 lg:ml-[264px]">
-          <div className="mx-auto max-w-[1800px] space-y-6">
-            <header className="glass-panel flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-              <div className="flex items-center gap-3">
-                <span className="status-dot green" />
+        <main className="relative z-10 min-h-screen px-4 py-4 lg:ml-[220px]">
+          <div className="mx-auto max-w-[1600px] space-y-4">
+            <header className="glass-panel flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+              <div className="flex items-center gap-2">
+                <span className="pulse-dot bg-emerald-400" />
                 <div>
-                  <div className="text-sm font-bold text-slate-100">Runtime online</div>
-                  <div className="kicker">localhost:3303 · PostgreSQL · SQLite · CodeGraph</div>
+                  <div className="text-xs font-semibold text-white">Runtime online</div>
+                  <div className="text-[10px] text-white/28">localhost:3303 · PostgreSQL · SQLite · CodeGraph</div>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 <span className="badge green">10 modules</span>
                 <span className="badge blue">78 tools</span>
-                <span className="badge violet">dark ops UI</span>
+                <span className="badge violet">dark ops</span>
               </div>
             </header>
             {children}
