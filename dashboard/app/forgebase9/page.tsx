@@ -31,6 +31,7 @@ export default function ForgeBase9Page() {
   const [test, setTest] = useState({ provider_id: "", model_id: "", prompt: "Reply with exactly: RecallOS model test OK" });
   const [testResult, setTestResult] = useState<Record<string, unknown> | null>(null);
   const [aForm, setAForm] = useState<Record<string, { provider_id: string; model_id: string }>>({});
+  const [dragOverAgent, setDragOverAgent] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setError("");
@@ -118,12 +119,13 @@ export default function ForgeBase9Page() {
     } catch (e) { setError(String(e)); } finally { setBusy(false); }
   };
 
-  const saveAssignment = async (agent_id: string) => {
-    const v = aForm[agent_id];
-    if (!v?.provider_id || !v?.model_id) return;
+  const saveAssignment = async (agent_id: string, customProviderId?: string, customModelId?: string) => {
+    const pid = customProviderId || aForm[agent_id]?.provider_id;
+    const mid = customModelId || aForm[agent_id]?.model_id;
+    if (!pid || !mid) return;
     setBusy(true); setError("");
     try {
-      const r = await fetch("/api/forgebase9/assignments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ workspace_id: "default", project_id: "recallos-runtime", agent_id, provider_id: v.provider_id, model_id: v.model_id }) }).then(r => r.json());
+      const r = await fetch("/api/forgebase9/assignments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ workspace_id: "default", project_id: "recallos-runtime", agent_id, provider_id: pid, model_id: mid }) }).then(r => r.json());
       if (r.error) throw new Error(r.error);
       await load();
     } catch (e) { setError(String(e)); } finally { setBusy(false); }
@@ -171,108 +173,181 @@ export default function ForgeBase9Page() {
         </DataCard>
       )}
 
-      {/* Providers + Models — balanced proportions */}
-      <div className="grid gap-3 xl:grid-cols-[1fr_1.5fr]">
-        {/* Providers — compact */}
-        <DataCard title="Providers" accent="blue">
-          <div className="space-y-2">
-            {providers.map((p, i) => (
-              <div key={p.id} className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-2.5 animate-fade-up" style={{ animationDelay: `${i * 40}ms` }}>
-                <div className="flex items-center gap-2">
-                  <span className={`pulse-dot ${p.has_api_key ? "bg-emerald-400" : "bg-amber-400"}`} />
-                  <span className="text-xs font-semibold text-white/80">{p.name}</span>
-                  <span className="badge blue ml-auto">{p.api_key_storage}</span>
-                </div>
-                <div className="mt-1.5 font-mono text-[10px] text-white/25 truncate">{p.base_url}</div>
-                <div className="mt-2 flex gap-1">
-                  <button className="btn btn-ghost !py-0.5 !px-2 !text-[10px] !rounded-md" onClick={() => discover(p.id)} disabled={busy}>Discover</button>
-                  <button className="btn btn-ghost !py-0.5 !px-2 !text-[10px] !rounded-md" onClick={() => editProvider(p)} disabled={busy}>Edit</button>
-                  <button className="btn btn-ghost !py-0.5 !px-2 !text-[10px] !rounded-md !text-rose-400" onClick={() => deleteProvider(p.id, p.name)} disabled={busy}>Delete</button>
-                </div>
-              </div>
-            ))}
-            {!providers.length && <div className="py-3 text-center text-xs text-white/20">No providers</div>}
-          </div>
-        </DataCard>
-
-        {/* Model catalog — more space */}
-        <DataCard title="Model catalog" subtitle={`${models.length} models · ${prefixes.length} prefixes`} accent="violet">
-          <div className="flex gap-2 mb-2">
-            <select className="w-36" value={mForm.provider_id} onChange={e => setMForm({ ...mForm, provider_id: e.target.value })}>
-              <option value="">Provider</option>
-              {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-            <input type="text" className="flex-1" placeholder="model id, e.g. ag/claude-sonnet-4-6" value={mForm.model_id} onChange={e => setMForm({ ...mForm, model_id: e.target.value })} />
-            <button className="btn btn-primary !py-1 !px-3 !text-[11px]" onClick={addModel} disabled={busy || !mForm.provider_id || !mForm.model_id}>Add</button>
-          </div>
-          {prefixes.length > 0 && <div className="flex flex-wrap gap-1 mb-2">{prefixes.map(p => <StatusPill key={p} tone="cyan">{p}</StatusPill>)}</div>}
-          <div className="grid gap-1.5 md:grid-cols-2 max-h-[240px] overflow-auto">
-            {models.map((m, i) => (
-              <div key={m.id} className="flex items-center gap-1.5 rounded-md border border-white/[0.04] bg-white/[0.015] px-2.5 py-1.5 animate-fade-up" style={{ animationDelay: `${i * 25}ms` }}>
-                <span className="badge violet !text-[9px]">{m.provider_name || "?"}</span>
-                {m.prefix && <span className="badge cyan !text-[9px]">{m.prefix}</span>}
-                <span className="font-mono text-[11px] text-white/55 truncate">{m.model_id}</span>
-              </div>
-            ))}
-          </div>
-        </DataCard>
-      </div>
-
-      {/* Agent assignment cards */}
-      <SectionTitle title="Agent assignments" subtitle="Model routing for each pipeline agent" />
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {AGENTS.map((agent, i) => {
-          const meta = AGENT_META[agent] || { icon: "●", role: agent, tone: "blue" };
-          const current = assignments.find(a => a.agent_id === agent);
-          const draft = aForm[agent] || { provider_id: current?.provider_id || providers[0]?.id || "", model_id: current?.model_id || "" };
-          return (
-            <div
-              key={agent}
-              className={`relative overflow-hidden rounded-lg border ${TONE_BORDER[meta.tone]} bg-gradient-to-br from-white/[0.03] to-transparent p-4 animate-fade-up transition-all hover:border-white/[0.12] hover:bg-white/[0.04]`}
-              style={{ animationDelay: `${i * 60}ms` }}
-            >
-              {/* Accent top line */}
-              <div className={`absolute inset-x-0 top-0 h-[2px] ${TONE_BG[meta.tone]} opacity-60`} />
-
-              {/* Header */}
-              <div className="flex items-center gap-2.5 mb-3">
-                <div className={`grid h-9 w-9 place-items-center rounded-lg ${TONE_BG[meta.tone]} text-base ${TONE_TEXT[meta.tone]}`}>{meta.icon}</div>
-                <div>
-                  <div className={`text-xs font-bold ${TONE_TEXT[meta.tone]} ${TONE_GLOW[meta.tone]}`}>{meta.role}</div>
-                  <div className="font-mono text-[10px] text-white/25">{agent}</div>
-                </div>
-              </div>
-
-              {/* Current assignment */}
-              {current ? (
-                <div className="mb-3 rounded-md border border-white/[0.05] bg-white/[0.02] px-2.5 py-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="pulse-dot bg-emerald-400" />
-                    <span className="text-[11px] font-medium text-white/60">{current.provider_name}</span>
+      {/* Balanced layout: sidebar & agent panel */}
+      <div className="grid gap-4 lg:grid-cols-[1fr_2.2fr]">
+        {/* Left Column: Providers + Catalog */}
+        <div className="space-y-4">
+          <DataCard title="Providers" accent="blue">
+            <div className="space-y-2">
+              {providers.map((p, i) => (
+                <div key={p.id} className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-2.5 animate-fade-up" style={{ animationDelay: `${i * 40}ms` }}>
+                  <div className="flex items-center gap-2">
+                    <span className={`pulse-dot ${p.has_api_key ? "bg-emerald-400" : "bg-amber-400"}`} />
+                    <span className="text-xs font-semibold text-white/80">{p.name}</span>
+                    <span className="badge blue ml-auto">{p.api_key_storage}</span>
                   </div>
-                  <div className="mt-0.5 font-mono text-[11px] text-white/40 truncate">{current.model_id}</div>
+                  <div className="mt-1.5 font-mono text-[10px] text-white/25 truncate">{p.base_url}</div>
+                  <div className="mt-2 flex gap-1">
+                    <button className="btn btn-ghost !py-0.5 !px-2 !text-[10px] !rounded-md" onClick={() => discover(p.id)} disabled={busy}>Discover</button>
+                    <button className="btn btn-ghost !py-0.5 !px-2 !text-[10px] !rounded-md" onClick={() => editProvider(p)} disabled={busy}>Edit</button>
+                    <button className="btn btn-ghost !py-0.5 !px-2 !text-[10px] !rounded-md !text-rose-400" onClick={() => deleteProvider(p.id, p.name)} disabled={busy}>Delete</button>
+                  </div>
                 </div>
-              ) : (
-                <div className="mb-3 rounded-md border border-white/[0.04] bg-white/[0.01] px-2.5 py-2 text-center text-[11px] text-white/20">Not assigned</div>
-              )}
-
-              {/* Assignment controls */}
-              <div className="space-y-1.5">
-                <select className="!py-1 !text-[11px] w-full" value={draft.provider_id} onChange={e => { const pid = e.target.value; setAForm({ ...aForm, [agent]: { provider_id: pid, model_id: modelsFor(pid)[0]?.model_id || "" } }); }}>
-                  <option value="">Select provider</option>
-                  {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
-                <select className="!py-1 !text-[11px] w-full" value={draft.model_id} onChange={e => setAForm({ ...aForm, [agent]: { ...draft, model_id: e.target.value } })}>
-                  <option value="">Select model</option>
-                  {modelsFor(draft.provider_id).map(m => <option key={m.model_id} value={m.model_id}>{m.model_id}</option>)}
-                </select>
-                <button className={`btn btn-primary w-full !py-1 !text-[11px]`} disabled={busy || !draft.provider_id || !draft.model_id} onClick={() => saveAssignment(agent)}>
-                  {current ? "Update assignment" : "Assign model"}
-                </button>
-              </div>
+              ))}
+              {!providers.length && <div className="py-3 text-center text-xs text-white/20">No providers</div>}
             </div>
-          );
-        })}
+          </DataCard>
+
+          <DataCard title="Model catalog" subtitle={`${models.length} models · ${prefixes.length} prefixes`} accent="violet">
+            <div className="flex gap-1.5 mb-2">
+              <select className="w-24 text-[11px] !py-0.5" value={mForm.provider_id} onChange={e => setMForm({ ...mForm, provider_id: e.target.value })}>
+                <option value="">Provider</option>
+                {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+              <input type="text" className="flex-1 text-[11px] !py-0.5" placeholder="model id" value={mForm.model_id} onChange={e => setMForm({ ...mForm, model_id: e.target.value })} />
+              <button className="btn btn-primary !py-0.5 !px-2.5 !text-[10px]" onClick={addModel} disabled={busy || !mForm.provider_id || !mForm.model_id}>Add</button>
+            </div>
+            {prefixes.length > 0 && <div className="flex flex-wrap gap-1 mb-2">{prefixes.map(p => <StatusPill key={p} tone="cyan">{p}</StatusPill>)}</div>}
+            
+            <div className="text-[10px] text-white/40 mb-1.5 italic">Drag models to Agent cards on the right to assign.</div>
+            <div className="space-y-1.5 max-h-[360px] overflow-auto pr-1">
+              {models.map((m, i) => (
+                <div
+                  key={m.id}
+                  draggable={true}
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("application/json", JSON.stringify({ provider_id: m.provider_id, model_id: m.model_id }));
+                    e.dataTransfer.effectAllowed = "copy";
+                  }}
+                  className="flex items-center gap-1.5 rounded-md border border-white/[0.04] bg-white/[0.015] px-2.5 py-1.5 cursor-grab active:cursor-grabbing hover:bg-white/[0.05] hover:border-white/[0.1] transition-all select-none animate-fade-up"
+                  style={{ animationDelay: `${i * 20}ms` }}
+                >
+                  <span className="text-[11px] text-white/30 mr-0.5 select-none font-bold">⋮⋮</span>
+                  <span className="badge violet !text-[8px] !px-1">{m.provider_name || "?"}</span>
+                  {m.prefix && <span className="badge cyan !text-[8px] !px-1">{m.prefix}</span>}
+                  <span className="font-mono text-[11px] text-white/60 truncate flex-1">{m.model_id}</span>
+                </div>
+              ))}
+              {!models.length && <div className="py-3 text-center text-xs text-white/20">No models in catalog</div>}
+            </div>
+          </DataCard>
+        </div>
+
+        {/* Right Column: Agent Assignments */}
+        <div className="space-y-3">
+          <SectionTitle title="Agent assignments" subtitle="Model routing for pipeline agents (Drag & drop to map)" />
+          
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {AGENTS.map((agent, i) => {
+              const meta = AGENT_META[agent] || { icon: "●", role: agent, tone: "blue" };
+              const current = assignments.find(a => a.agent_id === agent);
+              const draft = aForm[agent] || { provider_id: current?.provider_id || providers[0]?.id || "", model_id: current?.model_id || "" };
+              const isDragOver = dragOverAgent === agent;
+
+              return (
+                <div
+                  key={agent}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (dragOverAgent !== agent) setDragOverAgent(agent);
+                  }}
+                  onDragLeave={() => {
+                    if (dragOverAgent === agent) setDragOverAgent(null);
+                  }}
+                  onDrop={async (e) => {
+                    e.preventDefault();
+                    setDragOverAgent(null);
+                    try {
+                      const dataStr = e.dataTransfer.getData("application/json");
+                      if (!dataStr) return;
+                      const parsed = JSON.parse(dataStr);
+                      if (parsed.provider_id && parsed.model_id) {
+                        await saveAssignment(agent, parsed.provider_id, parsed.model_id);
+                      }
+                    } catch (err) {
+                      setError("Invalid drop item data");
+                    }
+                  }}
+                  className={`relative flex flex-col justify-between overflow-hidden rounded-lg border min-h-[260px] p-4 transition-all duration-300 animate-fade-up ${
+                    isDragOver 
+                      ? "border-emerald-500 bg-emerald-500/10 scale-[1.03] shadow-lg shadow-emerald-500/10" 
+                      : `${TONE_BORDER[meta.tone]} bg-gradient-to-b from-white/[0.03] to-transparent hover:border-white/[0.12] hover:bg-white/[0.04]`
+                  }`}
+                  style={{ animationDelay: `${i * 50}ms` }}
+                >
+                  {/* Glowing header accent */}
+                  <div className={`absolute inset-x-0 top-0 h-[2px] ${isDragOver ? "bg-emerald-400" : TONE_BG[meta.tone]} opacity-80`} />
+
+                  <div>
+                    {/* Header */}
+                    <div className="flex items-center gap-2.5 mb-4">
+                      <div className={`grid h-8 w-8 place-items-center rounded-lg text-base ${isDragOver ? "bg-emerald-500/20 text-emerald-400" : `${TONE_BG[meta.tone]} ${TONE_TEXT[meta.tone]}`}`}>{meta.icon}</div>
+                      <div>
+                        <div className={`text-xs font-bold ${isDragOver ? "text-emerald-400" : TONE_TEXT[meta.tone]} ${TONE_GLOW[meta.tone]}`}>{meta.role}</div>
+                        <div className="font-mono text-[9px] text-white/25">{agent}</div>
+                      </div>
+                    </div>
+
+                    {/* Current assignment state */}
+                    {current ? (
+                      <div className="mb-4 rounded-md border border-white/[0.05] bg-white/[0.02] p-2.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="pulse-dot bg-emerald-400" />
+                          <span className="text-[10px] text-white/40 uppercase tracking-wider font-semibold">Active Model</span>
+                        </div>
+                        <div className="mt-1 font-semibold text-xs text-white/85 truncate">{current.model_id}</div>
+                        <div className="mt-0.5 text-[10px] text-white/45">via <span className="text-white/60 font-medium">{current.provider_name}</span></div>
+                      </div>
+                    ) : (
+                      <div className="mb-4 rounded-md border border-dashed border-white/[0.08] bg-white/[0.005] p-4 text-center">
+                        <span className="text-[10px] text-white/20 uppercase tracking-wider font-medium">Unassigned</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Drop zone visual or fallback selector */}
+                  <div className="space-y-2 mt-auto">
+                    
+                    {/* Drag-n-drop hint */}
+                    <div className={`rounded border border-dashed text-center p-2 transition-all duration-200 ${
+                      isDragOver 
+                        ? "border-emerald-400/40 bg-emerald-500/5 text-emerald-400" 
+                        : "border-white/[0.04] bg-white/[0.005] text-white/25"
+                    }`}>
+                      <span className="text-[10px] font-mono select-none block">
+                        {isDragOver ? "✓ Drop to assign" : "⬇ Drag model here"}
+                      </span>
+                    </div>
+
+                    {/* Manual Override dropdown (collapsible) */}
+                    <div className="border-t border-white/[0.04] pt-2">
+                      <details className="group">
+                        <summary className="text-[9px] text-white/30 cursor-pointer select-none hover:text-white/50 transition-colors list-none flex items-center justify-between">
+                          <span>Manual override</span>
+                          <span className="transition-transform group-open:rotate-180">▾</span>
+                        </summary>
+                        <div className="space-y-1 mt-1.5 animate-fade-in">
+                          <select className="!py-0.5 !px-1.5 !text-[10px] w-full" value={draft.provider_id} onChange={e => { const pid = e.target.value; setAForm({ ...aForm, [agent]: { provider_id: pid, model_id: modelsFor(pid)[0]?.model_id || "" } }); }}>
+                            <option value="">Select provider</option>
+                            {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                          </select>
+                          <select className="!py-0.5 !px-1.5 !text-[10px] w-full" value={draft.model_id} onChange={e => setAForm({ ...aForm, [agent]: { ...draft, model_id: e.target.value } })}>
+                            <option value="">Select model</option>
+                            {modelsFor(draft.provider_id).map(m => <option key={m.model_id} value={m.model_id}>{m.model_id}</option>)}
+                          </select>
+                          <button className="btn btn-ghost w-full !py-0.5 !text-[10px] !rounded-md" disabled={busy || !draft.provider_id || !draft.model_id} onClick={() => saveAssignment(agent)}>
+                            Apply assignment
+                          </button>
+                        </div>
+                      </details>
+                    </div>
+                  </div>
+
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Direct model test — compact inline */}
